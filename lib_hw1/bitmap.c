@@ -96,6 +96,17 @@ bitmap_create (size_t bit_cnt)
   return NULL;
 }
 
+/* Expand the size of Bitmap by input size. */
+struct bitmap 
+*bitmap_expand(struct bitmap *bitmap, int size)
+{
+  int new_cnt =  bitmap->bit_cnt + size;
+  bitmap->bit_cnt = new_cnt;
+  bitmap->bits = realloc(bitmap->bits, byte_cnt(new_cnt));
+
+  return bitmap;
+}
+
 /* Creates and returns a bitmap with BIT_CNT bits in the
    BLOCK_SIZE bytes of storage preallocated at BLOCK.
    BLOCK_SIZE must be at least bitmap_needed_bytes(BIT_CNT). */

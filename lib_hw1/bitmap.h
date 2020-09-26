@@ -9,17 +9,21 @@
 
 /* Creation and destruction. */
 struct bitmap *bitmap_create (size_t bit_cnt);
-struct bitmap *bitmap_create_in_buf (size_t bit_cnt, void *, size_t byte_cnt);
+struct bitmap *bitap_create_in_buf (size_t bit_cnt, void *, size_t byte_cnt);
 size_t bitmap_buf_size (size_t bit_cnt);
 void bitmap_destroy (struct bitmap *);
 
 /* Bitmap size. */
 size_t bitmap_size (const struct bitmap *);
 
+/* Changing Bitmap size. */
+struct bitmap *bitmap_expand(struct bitmap *bitmap, int size);
+
 /* Setting and testing single bits. */
 void bitmap_set (struct bitmap *, size_t idx, bool);
 void bitmap_mark (struct bitmap *, size_t idx);
 void bitmap_reset (struct bitmap *, size_t idx);
+
 void bitmap_flip (struct bitmap *, size_t idx);
 bool bitmap_test (const struct bitmap *, size_t idx);
 

@@ -85,6 +85,9 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <time.h>
+#include <stdlib.h>
+
 
 /* List element. */
 struct list_elem 
@@ -174,5 +177,8 @@ struct list_elem *list_min (struct list *, list_less_func *, void *aux);
 
 /* Swap two items. */
 void list_swap(struct list_elem *a, struct list_elem *b);
+
+/* Shuffle elements in LIST. */
+void list_shuffle(struct list *list);
 
 #endif /* lib/kernel/list.h */
