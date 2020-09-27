@@ -141,6 +141,19 @@ int main()
             struct list_item *tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
             printf("%d\n", tmp_item->data);
         }
+        /* List: push the data at the front. */
+        else if (!strcmp(command, "list_push_front"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+
+            struct list_elem *tmp_elem_ptr = malloc(sizeof(struct list_elem));
+            struct list_item *tmp_item = malloc(sizeof(struct list_item));
+            tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
+            tmp_item->data = atoi(strtok(NULL, " "));
+
+            list_push_front(tmp_lists_ptr, tmp_elem_ptr);
+        }
         /* List: push the data at the end. */
         else if (!strcmp(command, "list_push_back"))
         {
@@ -241,6 +254,56 @@ int main()
             struct list_elem * min_elem_ptr = list_min(tmp_lists_ptr, *less, NULL);
             struct list_item * tmp_item_ptr = list_entry(min_elem_ptr, struct list_item, elem);
             printf("%d\n", tmp_item_ptr->data);
+        }
+        /* List: Remove an element of the given index. */
+        else if(!strcmp(command, "list_remove"))
+        {
+            command = strtok(NULL, " ");
+            struct list_elem *remove_elem_ptr = list_begin(find_list(command));
+            
+            int i=0;
+            int index = atoi(strtok(NULL, " "));
+            while(i<index)
+            {
+                remove_elem_ptr = list_next(remove_elem_ptr);
+                i++;
+            }
+
+            list_remove(remove_elem_ptr);
+        }
+        /* List: Reverse the original order of the list. */
+        else if(!strcmp(command, "list_reverse"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            list_reverse(tmp_lists_ptr);
+        }
+        /* List: Shuffle the original order of the list. 
+        else if(!strcmp(command, "list_shuffle"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            list_shuffle(tmp_lists_ptr);
+        }*/
+        /* List: Sort the list. */
+        else if(!strcmp(command, "list_sort"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            list_sort(tmp_lists_ptr, *less, NULL);
+        }
+         /* List: Move duplicated value to the second list. */
+        else if(!strcmp(command, "list_unique"))
+        {
+            command = strtok(NULL, " ");
+            struct list * tmp_lists_ptr = find_list(command);   
+            command = strtok(NULL, " ");
+            struct list * duplicate_lists_ptr = find_list(command);
+           
+            list_unique(tmp_lists_ptr, duplicate_lists_ptr, *less, NULL);
         }
     }
 
