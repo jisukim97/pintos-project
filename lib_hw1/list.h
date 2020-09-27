@@ -101,6 +101,7 @@ struct list
   {
     struct list_elem head;      /* List head. */
     struct list_elem tail;      /* List tail. */
+    char name[10];                /* List name determined by user. */
   };
 
 /* List item. */
