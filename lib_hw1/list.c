@@ -338,6 +338,7 @@ void list_reverse(struct list *list)
   }
 }
 
+
 /* Returns true only if the list elements A through B (exclusive)
    are in order according to LESS given auxiliary data AUX. */
 static bool
@@ -562,4 +563,15 @@ void list_shuffle(struct list *list)
     list_swap(a, b);
     a = list_next(a);
   }
+}
+
+/* list less functions. */
+bool less(const struct list_elem * a, const struct list_elem * b, void * aux)
+{
+  struct list_item * a_item = list_entry(a, struct list_item, elem);
+  struct list_item * b_item = list_entry(b, struct list_item, elem);
+
+  if( a_item->data< b_item->data)
+    return true;
+  else return false;
 }

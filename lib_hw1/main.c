@@ -161,8 +161,6 @@ int main()
             struct list *tmp_lists_ptr = find_list(command);
 
             struct list_elem *tmp_elem_ptr = list_pop_front(tmp_lists_ptr);
-
-            struct list_item *tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
         }
         /* List: Pop the end data. */
         else if (!strcmp(command, "list_pop_back"))
@@ -171,8 +169,19 @@ int main()
             struct list *tmp_lists_ptr = find_list(command);
 
             struct list_elem *tmp_elem_ptr = list_pop_back(tmp_lists_ptr);
+        }
+        /* List: Instert Orderd. */
+        else if(!strcmp(command, "list_insert_ordered"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+            
+            struct list_elem *tmp_elem_ptr = malloc(sizeof(struct list_elem));
+            struct list_item *tmp_item = malloc(sizeof(struct list_item));
+            tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
+            tmp_item->data = atoi(strtok(NULL, " "));
 
-            struct list_item *tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
+            list_insert_ordered(tmp_lists_ptr, tmp_elem_ptr, * less, NULL);
         }
     }
 
