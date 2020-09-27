@@ -204,6 +204,44 @@ int main()
 
             list_insert(before_elem_ptr, tmp_elem_ptr);
         }
+        /* List: Test whether the list is empty */
+        else if(!strcmp(command, "list_empty"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+            
+            if(list_empty(tmp_lists_ptr)) 
+                printf("true\n");
+            else printf("false\n");
+        }
+        /* List: Print the size of the list */
+        else if(!strcmp(command, "list_size"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            printf("%zu\n", list_size(tmp_lists_ptr));
+        }
+        /* List: Find the max value in the list */
+        else if(!strcmp(command, "list_max"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            struct list_elem * max_elem_ptr = list_max(tmp_lists_ptr, *less, NULL);
+            struct list_item * tmp_item_ptr = list_entry(max_elem_ptr, struct list_item, elem);
+            printf("%d\n", tmp_item_ptr->data);
+        }
+        /* List: Find the min value in the list */
+        else if(!strcmp(command, "list_min"))
+        {
+            command = strtok(NULL, " ");
+            struct list *tmp_lists_ptr = find_list(command);
+           
+            struct list_elem * min_elem_ptr = list_min(tmp_lists_ptr, *less, NULL);
+            struct list_item * tmp_item_ptr = list_entry(min_elem_ptr, struct list_item, elem);
+            printf("%d\n", tmp_item_ptr->data);
+        }
     }
 
     /* Free line buffer. */
