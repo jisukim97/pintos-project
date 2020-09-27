@@ -170,7 +170,7 @@ int main()
 
             struct list_elem *tmp_elem_ptr = list_pop_back(tmp_lists_ptr);
         }
-        /* List: Instert Orderd. */
+        /* List: Insert the element right before the first bigger one. */
         else if(!strcmp(command, "list_insert_ordered"))
         {
             command = strtok(NULL, " ");
@@ -182,6 +182,27 @@ int main()
             tmp_item->data = atoi(strtok(NULL, " "));
 
             list_insert_ordered(tmp_lists_ptr, tmp_elem_ptr, * less, NULL);
+        }
+        /* List: Insert the element at the index given. */
+        else if(!strcmp(command, "list_insert"))
+        {
+            command = strtok(NULL, " ");
+            struct list_elem *before_elem_ptr = list_begin(find_list(command));
+            
+            int i=0;
+            int index = atoi(strtok(NULL, " "));
+            while(i<index)
+            {
+                before_elem_ptr = list_next(before_elem_ptr);
+                i++;
+            }
+
+            struct list_elem *tmp_elem_ptr = malloc(sizeof(struct list_elem));
+            struct list_item *tmp_item = malloc(sizeof(struct list_item));
+            tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
+            tmp_item->data = atoi(strtok(NULL, " "));
+
+            list_insert(before_elem_ptr, tmp_elem_ptr);
         }
     }
 
