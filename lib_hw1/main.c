@@ -279,14 +279,14 @@ int main()
            
             list_reverse(tmp_lists_ptr);
         }
-        /* List: Shuffle the original order of the list. 
+        /* List: Shuffle the original order of the list. */
         else if(!strcmp(command, "list_shuffle"))
         {
             command = strtok(NULL, " ");
             struct list *tmp_lists_ptr = find_list(command);
            
             list_shuffle(tmp_lists_ptr);
-        }*/
+        }
         /* List: Sort the list. */
         else if(!strcmp(command, "list_sort"))
         {
@@ -295,7 +295,7 @@ int main()
            
             list_sort(tmp_lists_ptr, *less, NULL);
         }
-         /* List: Move duplicated value to the second list. */
+        /* List: Move duplicated value to the second list. */
         else if(!strcmp(command, "list_unique"))
         {
             command = strtok(NULL, " ");
@@ -304,6 +304,34 @@ int main()
             struct list * duplicate_lists_ptr = find_list(command);
            
             list_unique(tmp_lists_ptr, duplicate_lists_ptr, *less, NULL);
+        }
+        /* List: Swap two elements with the given index. */
+        else if(!strcmp(command, "list_swap"))
+        {
+            command = strtok(NULL, " ");
+            struct list_elem * first_elem_ptr = list_begin(find_list(command));   
+            struct list_elem * second_elem_ptr = first_elem_ptr;
+            
+            int first_i = atoi(strtok(NULL, " "));
+            int second_i = atoi(strtok(NULL, " "));
+
+            /* Find the first element. */
+            int i=0;
+            while(i<first_i)
+            {
+                first_elem_ptr = list_next(first_elem_ptr);
+                i++;
+            }
+            
+            /* Find the second element. */
+            i=0;
+            while(i<second_i)
+            {
+                second_elem_ptr = list_next(second_elem_ptr);
+                i++;
+            }
+            
+            list_swap(first_elem_ptr, second_elem_ptr);
         }
     }
 
