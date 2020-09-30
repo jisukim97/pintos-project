@@ -75,6 +75,19 @@ hash_clear (struct hash *h, hash_action_func *destructor)
   h->elem_cnt = 0;
 }
 
+/* Action fuction3: destructor. */
+void destructor(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item = hash_entry(e, struct hash_item, elem);
+
+  struct list_elem list_elem = e->list_elem;
+  struct list_elem * prev = list_elem.prev;
+  list_elem.prev->next = list_elem.next;
+  list_elem.next->prev = prev;
+
+  free(hash_item);
+}
+
 /* Destroys hash table H.
 
    If DESTRUCTOR is non-null, then it is first called for each

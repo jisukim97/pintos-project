@@ -106,18 +106,10 @@ int main()
             {
                 struct hash *hash_ptr = &hashtables[++hashs_ptr];
                 hash_init(hash_ptr, hash_function, less_hash, NULL);
-                hash_ptr->elem_cnt = 0;
-                hash_ptr->bucket_cnt = 4;
-                hash_ptr->buckets = malloc(sizeof(*(hash_ptr->buckets)) * hash_ptr->bucket_cnt);
-                hash_ptr->hash = hash_function;
-                hash_ptr->less = less_hash;
-                hash_ptr->aux = NULL;
-
+                
                 for (int i = 0; i < hash_ptr->bucket_cnt; i++)
-                {
                     list_init(&hash_ptr->buckets[i]);
-                }
-
+                
                 command = strtok(NULL, " ");
                 strcpy(hash_ptr->name, trim(command));
             }
@@ -229,6 +221,32 @@ int main()
             hash_item_ptr->data = atoi(strtok(NULL, " "));
 
             hash_delete(hash_ptr, hash_elem_ptr);
+        }
+        /* Hashtable: print whether the hash is empty. */
+        else if(!strcmp(command, "hash_empty"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+
+            if(hash_empty(hash_ptr))
+                printf("true\n");
+            else printf("false\n");
+        }
+        /* Hashtable: print the size of hash. */
+        else if(!strcmp(command, "hash_size"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+
+            printf("%zu\n", hash_size(hash_ptr));
+        }
+        /* Hashtable: remove all the elements from the hash. */
+        else if(!strcmp(command, "hash_clear"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+
+            hash_clear(hash_ptr, *destructor);
         }
 
         /* List: print the front data. */
