@@ -65,6 +65,7 @@ typedef void hash_action_func(struct hash_elem *e, void *aux);
 /* Hash table. */
 struct hash
 {
+  char name[10];           /* Name given by User. */
   size_t elem_cnt;      /* Number of elements in table. */
   size_t bucket_cnt;    /* Number of buckets, a power of 2. */
   struct list *buckets; /* Array of `bucket_cnt' lists. */
@@ -107,7 +108,18 @@ unsigned hash_bytes(const void *, size_t);
 unsigned hash_string(const char *);
 unsigned hash_int(int);
 
-/* Added hash function. */
+/* Less function. */
+bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * aux);
+
+/* Hash function with hash_int. */
+unsigned int hash_function(const struct hash_elem * e, void * aux);
+
+
+/* Action functions. */
+void square(struct hash_elem * e, void * aux);
+void triple(struct hash_elem * e, void * aux);
+
+/* Added hash_int_2. */
 unsigned hash_int_2 (int);
 
 #endif /* lib/kernel/hash.h */
