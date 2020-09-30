@@ -75,7 +75,6 @@ hash_clear (struct hash *h, hash_action_func *destructor)
   h->elem_cnt = 0;
 }
 
-
 /* Destroys hash table H.
 
    If DESTRUCTOR is non-null, then it is first called for each
@@ -304,13 +303,6 @@ hash_int (int i)
   return hash_bytes (&i, sizeof i);
 }
 
-/* Hash function with hash_int. */
-unsigned int hash_function(const struct hash_elem * e, void * aux)
-{
-  struct hash_item *hash_item_ptr = hash_entry(e, struct hash_item, elem);                 
-  return hash_int(hash_item_ptr->data);
-}
-
 /* Returns a hash of integer I (ver.2) */
 unsigned
 hash_int_2 (int i) 
@@ -318,6 +310,7 @@ hash_int_2 (int i)
   unsigned tmp = i;
   return tmp%4;
 }
+
 
 /* Returns the bucket in H that E belongs in. */
 static struct list *
@@ -446,46 +439,3 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
-/* hashtable less functions. */
-bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * aux)
-{
-  struct hash_item * a_item = hash_entry(a, struct hash_item, elem);
-  struct hash_item * b_item = hash_entry(b, struct hash_item, elem);
-
-  if( a_item->data < b_item->data)
-    return true;
-  else return false;
-}
-
-// Action Functions
-
-/* Action function1: SQUARE. */
-void square(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
-  hash_item_ptr = hash_entry(e, struct hash_item, elem);
-  int hash_data = hash_item_ptr->data;
-  hash_item_ptr->data = hash_data*hash_data;
-}
-
-/* Action functino2: TRIPLE. */
-void triple(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
-  hash_item_ptr = hash_entry(e, struct hash_item, elem);
-  int hash_data = hash_item_ptr->data;
-  hash_item_ptr->data = hash_data*hash_data*hash_data;
-}
-
-/* Action fuction3: DESTUCTOR. */
-void destructor(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item = hash_entry(e, struct hash_item, elem);
-
-  struct list_elem list_elem = e->list_elem;
-  struct list_elem * prev = list_elem.prev;
-  list_elem.prev->next = list_elem.next;
-  list_elem.next->prev = prev;
-
-  free(hash_item);
-}
