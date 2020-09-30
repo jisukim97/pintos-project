@@ -16,6 +16,9 @@ void bitmap_destroy (struct bitmap *);
 /* Bitmap size. */
 size_t bitmap_size (const struct bitmap *);
 
+/* Changing Bitmap name. */
+void bitmap_change_name(struct bitmap * b, char * new_name);
+
 /* Changing Bitmap size. */
 struct bitmap *bitmap_expand(struct bitmap *bitmap, int size);
 
@@ -51,5 +54,8 @@ bool bitmap_write (const struct bitmap *, struct file *);
 
 /* Debugging. */
 void bitmap_dump (const struct bitmap *);
+
+/* Ect. */
+int getAbit(unsigned int x, int n);
 
 #endif /* lib/kernel/bitmap.h */

@@ -118,6 +118,7 @@ unsigned int hash_function(const struct hash_elem * e, void * aux);
 /* Action functions. */
 void square(struct hash_elem * e, void * aux);
 void triple(struct hash_elem * e, void * aux);
+void destructor(struct hash_elem *e, void *aux);
 
 /* Added hash_int_2. */
 unsigned hash_int_2 (int);

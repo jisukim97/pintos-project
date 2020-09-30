@@ -4,11 +4,13 @@
 #include "round.h"	// 		#include <round.h>
 #include <stdio.h>
 #include <stdlib.h>	// 		#include "threads/malloc.h":malloc
+#include <string.h>
 #ifdef FILESYS
 #include "filesys/file.h"
 #endif
 
-#include "hex_dump.h"	// 'hex_dump' : defined in pintos/src/lib/stdio.c
+#include "hex_dump.h"
+#include "hex_dump.c"	// 'hex_dump' : defined in pintos/src/lib/stdio.c
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
 /* Element type.
@@ -29,6 +31,7 @@ typedef unsigned long elem_type;
    simulates an array of bits. */
 struct bitmap
   {
+    char name[10];      /* Name of bits. */
     size_t bit_cnt;     /* Number of bits. */
     elem_type *bits;    /* Elements that represent bits. */
   };
@@ -97,8 +100,8 @@ bitmap_create (size_t bit_cnt)
 }
 
 /* Expand the size of Bitmap by input size. */
-struct bitmap 
-*bitmap_expand(struct bitmap *bitmap, int size)
+struct bitmap *
+bitmap_expand(struct bitmap *bitmap, int size)
 {
   int new_cnt =  bitmap->bit_cnt + size;
   bitmap->bit_cnt = new_cnt;
@@ -385,3 +388,38 @@ bitmap_dump (const struct bitmap *b)
   hex_dump (0, b->bits, byte_cnt (b->bit_cnt)/2, false);
 }
 
+/* Get the bitmap name. */
+char * 
+bitmap_get_name(struct bitmap * b)
+{
+  return b->name;
+}
+
+/* Change the bitmap name when it is created. */
+void 
+bitmap_change_name(struct bitmap * b, char *new_name)
+{
+  strcpy(b->name, new_name);
+}
+
+/* Print the bits from the bitmap. */
+void bitmap_print(struct bitmap *b)
+{
+  size_t bits_cnt = b->bit_cnt;
+  size_t elem_tot = elem_idx(bits_cnt);
+
+  for(int i=0; i<= elem_tot; i++)
+  {
+    elem_type * bits = b->bits;
+    for(int j=0; j< bits_cnt; j++)
+      printf("%d", getAbit(bits[i],j));
+    
+    bits_cnt -= sizeof(elem_type);
+  } 
+  printf("\n");
+}
+
+// 지정한 정수에서, 몇번째 비트만 읽어서 반환하는 함수
+int getAbit(unsigned int x, int n) { 
+  return (x & (1 << n)) >> n;
+}

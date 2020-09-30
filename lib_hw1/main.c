@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "list.c"
 #include "hash.c"
+#include "bitmap.c"
 
 #define MAX_SIZE 10
 
@@ -12,6 +13,9 @@ int lists_ptr = -1; /* pointer for lists stored */
 
 struct hash hashtables[MAX_SIZE];
 int hashs_ptr = -1; /* pointer for hashtables stored */
+
+struct bitmap * bitmaps[MAX_SIZE];
+int bitmaps_ptr = -1; /* pointer for bitmaps stored. */
 
 char *rtrim(char *s)
 {
@@ -69,6 +73,22 @@ struct hash *find_hashtable(char *finding_name)
             return &hashtables[i];
 }
 
+/* Find the exact bitmap from the array of Bitmap pointers. */
+struct bitmap *find_bitmap(char *finding_name)
+{
+    char name[10];
+    strcpy(name, trim(finding_name));
+
+    int i;
+    for (i = 0; i < bitmaps_ptr; i++)
+    {
+        char *tmp_name = bitmap_get_name(bitmaps[i]);
+        if (!strcmp(tmp_name, name))
+            break;
+    }
+    return bitmaps[i];
+}
+
 int main()
 {
     char *line = NULL;
@@ -93,10 +113,7 @@ int main()
             if (!strcmp(command, "list"))
             {
                 struct list *list_ptr = &lists[++lists_ptr];
-                list_ptr->head.prev = NULL;
-                list_ptr->head.next = &list_ptr->tail;
-                list_ptr->tail.prev = &list_ptr->head;
-                list_ptr->tail.next = NULL;
+                list_init(list_ptr);
 
                 command = strtok(NULL, " ");
                 strcpy(list_ptr->name, trim(command));
@@ -116,6 +133,13 @@ int main()
             /* Create Bitmap. */
             else if (!strcmp(command, "bitmap"))
             {
+                command = strtok(NULL," ");
+                char new_name[10];
+                strcpy(new_name, trim(command));
+
+                size_t size = atoi(strtok(NULL, " "));
+                bitmaps[++bitmaps_ptr] = bitmap_create(size);
+                bitmap_change_name(bitmaps[bitmaps_ptr], new_name);
             }
         }
         /* Delete the data structure. */
@@ -136,6 +160,7 @@ int main()
             /* Bitmap: delete. */
             else if (strstr(command, "bitmap") != NULL)
             {
+                
             }
         }
         /* Enumerate data in the structure. */
@@ -147,9 +172,10 @@ int main()
             /* List: enumerate. */
             if (strstr(command, "list") != NULL)
             {
-                struct list_elem *tmp_elem_ptr = list_begin(find_list(command));
+                struct list * list_ptr = find_list(command);
+                struct list_elem *tmp_elem_ptr = list_begin(list_ptr);
 
-                while (!is_tail(tmp_elem_ptr))
+                while (list_tail(list_ptr)!=tmp_elem_ptr)
                 {
                     flag = 1;
                     struct list_item *tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
@@ -177,11 +203,35 @@ int main()
                     printf("\n");
             }
             /* Bitmap: enumerate. */
-            else if (strstr(command, "bitmap") != NULL)
+            else if (strstr(command, "bm") != NULL)
             {
+                struct bitmap * bm_ptr = find_bitmap(command);
+                bitmap_print(bm_ptr);                
             }
             if (flag)
                 printf("\n");
+        }
+        /*  Bitmap: mark the bit indexed True. */
+        else if(!strcmp(command, "bitmap_mark"))
+        {
+            command = strtok(NULL," ");
+            struct bitmap * bm_ptr = find_bitmap(command);
+
+            int bit_idx = atoi(strtok(NULL, " "));
+            bitmap_mark(bm_ptr, bit_idx);
+        }
+        /* Bitmap: print whether the bits in given ragne are all true. */
+        else if (!strcmp(command, "bitmap_all"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            if(bitmap_all(bm_ptr,start_idx,cnt))
+                printf("true\n");
+            else printf("false\n");
         }
 
         /* Hashtable: insert the given data. */
