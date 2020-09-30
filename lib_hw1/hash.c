@@ -303,6 +303,13 @@ hash_int (int i)
   return hash_bytes (&i, sizeof i);
 }
 
+/* Hash function with hash_int. */
+unsigned int hash_function(const struct hash_elem * e, void * aux)
+{
+  struct hash_item *hash_item_ptr = hash_entry(e, struct hash_item, elem);                 
+  return hash_int(hash_item_ptr->data);
+}
+
 /* Returns a hash of integer I (ver.2) */
 unsigned
 hash_int_2 (int i) 
@@ -310,7 +317,6 @@ hash_int_2 (int i)
   unsigned tmp = i;
   return tmp%4;
 }
-
 
 /* Returns the bucket in H that E belongs in. */
 static struct list *
@@ -439,3 +445,13 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
+/* hashtable less functions. */
+bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * aux)
+{
+  struct hash_item * a_item = hash_entry(a, struct hash_item, elem);
+  struct hash_item * b_item = hash_entry(b, struct hash_item, elem);
+
+  if( a_item->data < b_item->data)
+    return true;
+  else return false;
+}

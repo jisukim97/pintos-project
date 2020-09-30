@@ -571,7 +571,7 @@ void list_shuffle(struct list *list)
 }
 
 /* list less functions. */
-bool less(const struct list_elem * a, const struct list_elem * b, void * aux)
+bool less_list(const struct list_elem * a, const struct list_elem * b, void * aux)
 {
   struct list_item * a_item = list_entry(a, struct list_item, elem);
   struct list_item * b_item = list_entry(b, struct list_item, elem);
