@@ -181,6 +181,24 @@ hash_apply (struct hash *h, hash_action_func *action)
     }
 }
 
+/* Action function1: SQUARE. */
+void square(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data;
+}
+
+/* Action functino2: TRIPLE. */
+void triple(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data*hash_data;
+}
+
 /* Initializes I for iterating hash table H.
 
    Iteration idiom:

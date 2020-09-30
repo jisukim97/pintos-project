@@ -98,21 +98,27 @@ int main()
                 list_ptr->tail.prev = &list_ptr->head;
                 list_ptr->tail.next = NULL;
 
-                command = strtok(NULL, "\n");
+                command = strtok(NULL, " ");
                 strcpy(list_ptr->name, trim(command));
             }
             /* Create Hash table. */
             else if (!strcmp(command, "hashtable"))
             {
                 struct hash *hash_ptr = &hashtables[++hashs_ptr];
+                hash_init(hash_ptr, hash_function, less_hash, NULL);
                 hash_ptr->elem_cnt = 0;
                 hash_ptr->bucket_cnt = 4;
-                hash_ptr->buckets = malloc(sizeof *hash_ptr->buckets * hash_ptr->bucket_cnt);
+                hash_ptr->buckets = malloc(sizeof(*(hash_ptr->buckets)) * hash_ptr->bucket_cnt);
                 hash_ptr->hash = hash_function;
                 hash_ptr->less = less_hash;
                 hash_ptr->aux = NULL;
 
-                command = strtok(NULL, "\n");
+                for (int i = 0; i < hash_ptr->bucket_cnt; i++)
+                {
+                    list_init(&hash_ptr->buckets[i]);
+                }
+
+                command = strtok(NULL, " ");
                 strcpy(hash_ptr->name, trim(command));
             }
             /* Create Bitmap. */
@@ -124,7 +130,21 @@ int main()
         else if (!strcmp(command, "delete"))
         {
             command = strtok(NULL, " ");
-            list_init(find_list(command));
+
+            /* List: delete. */
+            if (strstr(command, "list") != NULL)
+            {
+                list_init(find_list(command));
+            }
+            /* Hashtable: delete. */
+            else if (strstr(command, "hash") != NULL)
+            {
+                hash_init(find_hashtable(command), NULL, NULL, NULL);
+            }
+            /* Bitmap: delete. */
+            else if (strstr(command, "bitmap") != NULL)
+            {
+            }
         }
         /* Enumerate data in the structure. */
         else if (!strcmp(command, "dumpdata"))
@@ -147,37 +167,36 @@ int main()
                 }
             }
             /* Hashtable: enumerate. */
-            else if (strstr(command, "hash")!=NULL)
+            else if (strstr(command, "hash") != NULL)
             {
-                int flag=0;
+                int flag = 0;
                 struct hash *hash_ptr = find_hashtable(command);
                 struct hash_iterator i;
 
                 hash_first(&i, hash_ptr);
                 while (hash_next(&i))
-                {   
-                    flag=1;
+                {
+                    flag = 1;
                     struct hash_item *hash_item_ptr = hash_entry(hash_cur(&i), struct hash_item, elem);
-                    printf("%d ",hash_item_ptr->data);
+                    printf("%d ", hash_item_ptr->data);
                 }
 
-                if(flag) printf("\n");
+                if (flag)
+                    printf("\n");
             }
             /* Bitmap: enumerate. */
-            else if(strstr(command, "bitmap")!=NULL)
+            else if (strstr(command, "bitmap") != NULL)
             {
-
-
             }
             if (flag)
                 printf("\n");
         }
 
         /* Hashtable: insert the given data. */
-        else if(!strcmp(command, "hash_insert"))
+        else if (!strcmp(command, "hash_insert"))
         {
             command = strtok(NULL, " ");
-            struct hash *hash_ptr = find_hashtable(command); 
+            struct hash *hash_ptr = find_hashtable(command);
 
             struct hash_elem *hash_elem_ptr = malloc(sizeof(struct hash_elem));
             struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
@@ -185,6 +204,18 @@ int main()
             hash_item_ptr->data = atoi(strtok(NULL, " "));
 
             hash_insert(hash_ptr, hash_elem_ptr);
+        }
+        /* Hashtable: apply the operation to Hashtable. */
+        else if (!strcmp(command, "hash_apply"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+
+            command = strtok(NULL, "\n");
+            if (!strcmp(command, "square"))
+                hash_apply(hash_ptr, *square);
+            else if (!strcmp(command, "triple"))
+                hash_apply(hash_ptr, *triple);
         }
 
         /* List: print the front data. */
