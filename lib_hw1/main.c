@@ -217,6 +217,19 @@ int main()
             else if (!strcmp(command, "triple"))
                 hash_apply(hash_ptr, *triple);
         }
+        /* Hashtable: delete the element in hashtable. */
+        else if(!strcmp(command, "hash_delete"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+    
+            struct hash_elem *hash_elem_ptr = malloc(sizeof(struct hash_elem));
+            struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+            hash_item_ptr = hash_entry(hash_elem_ptr, struct hash_item, elem);
+            hash_item_ptr->data = atoi(strtok(NULL, " "));
+
+            hash_delete(hash_ptr, hash_elem_ptr);
+        }
 
         /* List: print the front data. */
         else if (!strcmp(command, "list_front"))
