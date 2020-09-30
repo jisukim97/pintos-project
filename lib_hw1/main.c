@@ -248,6 +248,20 @@ int main()
 
             hash_clear(hash_ptr, *destructor);
         }
+        /* Hashtable: find the equal element if there it is. */
+        else if(!strcmp(command, "hash_find"))
+        {
+            command = strtok(NULL, " ");
+            struct hash *hash_ptr = find_hashtable(command);
+
+            struct hash_elem *hash_elem_ptr = malloc(sizeof(struct hash_elem));
+            struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+            hash_item_ptr = hash_entry(hash_elem_ptr, struct hash_item, elem);
+            hash_item_ptr->data = atoi(strtok(NULL, " "));
+
+            if(hash_find(hash_ptr, hash_elem_ptr)!=NULL)
+                printf("%d\n", hash_item_ptr->data);
+        }
 
         /* List: print the front data. */
         else if (!strcmp(command, "list_front"))

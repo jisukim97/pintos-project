@@ -75,18 +75,6 @@ hash_clear (struct hash *h, hash_action_func *destructor)
   h->elem_cnt = 0;
 }
 
-/* Action fuction3: destructor. */
-void destructor(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item = hash_entry(e, struct hash_item, elem);
-
-  struct list_elem list_elem = e->list_elem;
-  struct list_elem * prev = list_elem.prev;
-  list_elem.prev->next = list_elem.next;
-  list_elem.next->prev = prev;
-
-  free(hash_item);
-}
 
 /* Destroys hash table H.
 
@@ -192,24 +180,6 @@ hash_apply (struct hash *h, hash_action_func *action)
           action (list_elem_to_hash_elem (elem), h->aux);
         }
     }
-}
-
-/* Action function1: SQUARE. */
-void square(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
-  hash_item_ptr = hash_entry(e, struct hash_item, elem);
-  int hash_data = hash_item_ptr->data;
-  hash_item_ptr->data = hash_data*hash_data;
-}
-
-/* Action functino2: TRIPLE. */
-void triple(struct hash_elem *e, void *aux)
-{
-  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
-  hash_item_ptr = hash_entry(e, struct hash_item, elem);
-  int hash_data = hash_item_ptr->data;
-  hash_item_ptr->data = hash_data*hash_data*hash_data;
 }
 
 /* Initializes I for iterating hash table H.
@@ -485,4 +455,37 @@ bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * au
   if( a_item->data < b_item->data)
     return true;
   else return false;
+}
+
+// Action Functions
+
+/* Action function1: SQUARE. */
+void square(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data;
+}
+
+/* Action functino2: TRIPLE. */
+void triple(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data*hash_data;
+}
+
+/* Action fuction3: DESTUCTOR. */
+void destructor(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item = hash_entry(e, struct hash_item, elem);
+
+  struct list_elem list_elem = e->list_elem;
+  struct list_elem * prev = list_elem.prev;
+  list_elem.prev->next = list_elem.next;
+  list_elem.next->prev = prev;
+
+  free(hash_item);
 }
