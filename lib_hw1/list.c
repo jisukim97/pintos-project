@@ -338,7 +338,6 @@ void list_reverse(struct list *list)
   }
 }
 
-
 /* Returns true only if the list elements A through B (exclusive)
    are in order according to LESS given auxiliary data AUX. */
 static bool
@@ -528,35 +527,32 @@ void list_swap(struct list_elem *a, struct list_elem *b)
   struct list_elem *a_next = a->next;
 
   //insert item pointed by a into the position of item pointed by b
-  b->prev->next = (b->prev==a)? b->next : a;
-  b->next->prev = a;
-  a->prev = (b->prev==a)? b : b->prev;
+  a->prev = b->prev;
   a->next = b->next;
-  
+  b->prev->next = a;
+  b->next->prev = a;
+
   //insert item pointed by b into the original position of item pointed by a
-  a_prev->next = b;
-  a_next->prev = (b->prev==a)? a_prev : b;
   b->prev = a_prev;
-  b->next = (a_next==b)? a : a_next;
+  b->next = a_next;
+  a_prev->next = b;
+  a_next->prev = b;
 }
 
 /* Shuffle the list. */
 void list_shuffle(struct list *list)
 {
-  srand((unsigned int)time(NULL));
+  srand(time(NULL));
   unsigned int len = list_size(list);
   struct list_elem *a, *b;
-  struct list_elem * tmp_a;
   int random;
 
-  tmp_a = list_begin(list);
-  a = tmp_a;
-  b = tmp_a;
+  a = list_begin(list);
+  b = a;
 
-  for (int i = 0; !is_tail(tmp_a); i++)
+  for (int i = 0; i < len - 1; i++)
   {
-    random = (int)rand() % len;
-    printf("this time random num: %d\n", random);
+    random = rand() % (len - i) + i;
     while (random > 0)
     {
       b = list_next(b);
@@ -564,19 +560,6 @@ void list_shuffle(struct list *list)
       random--;
     }
     list_swap(a, b);
-    tmp_a = list_next(tmp_a);
-    a = tmp_a;
-    b = tmp_a;
+    a = list_next(a);
   }
-}
-
-/* list less functions. */
-bool less_list(const struct list_elem * a, const struct list_elem * b, void * aux)
-{
-  struct list_item * a_item = list_entry(a, struct list_item, elem);
-  struct list_item * b_item = list_entry(b, struct list_item, elem);
-
-  if( a_item->data< b_item->data)
-    return true;
-  else return false;
 }
