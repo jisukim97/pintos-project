@@ -220,6 +220,15 @@ int main()
             int bit_idx = atoi(strtok(NULL, " "));
             bitmap_mark(bm_ptr, bit_idx);
         }
+        /*  Bitmap: reset the bit with the given index. */
+        else if(!strcmp(command, "bitmap_reset"))
+        {
+            command = strtok(NULL," ");
+            struct bitmap * bm_ptr = find_bitmap(command);
+
+            int bit_idx = atoi(strtok(NULL, " "));
+            bitmap_reset(bm_ptr, bit_idx);
+        }
         /* Bitmap: print whether the bits in given ragne are all true. */
         else if (!strcmp(command, "bitmap_all"))
         {
@@ -228,10 +237,163 @@ int main()
 
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
+            
+            printf("%s\n", bitmap_all(bm_ptr, start_idx, cnt) ? "true" : "false");
+        }
+        /* Bitmap: print whether any bit in given range is true. */
+        else if (!strcmp(command, "bitmap_any"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
 
-            if(bitmap_all(bm_ptr,start_idx,cnt))
-                printf("true\n");
-            else printf("false\n");
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            
+            printf("%s\n", bitmap_any(bm_ptr,start_idx,cnt) ? "true" : "false");
+        }
+        /* Bitmap: print whether the bits in given ragne are all the same as given VALUE. */
+        else if (!strcmp(command, "bitmap_contains"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
+
+            printf("%s\n", bitmap_contains(bm_ptr, start_idx, cnt, value) ? "true" : "false");
+        }
+        /* Bitmap: Check whether the bits in the given range is all 'not true'. */
+        else if (!strcmp(command, "bitmap_none"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            printf("%s\n",bitmap_none(bm_ptr, start_idx, cnt)? "true":"false");
+        }
+        /* Bitmap: print the number of bits with the given VALUE in given range. */
+        else if (!strcmp(command, "bitmap_count"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            printf("%zu\n", bitmap_count(bm_ptr, start_idx, cnt, value));
+        }
+        /* Bitmap: Dumps the contents of B to the console as hexadecimal. */
+        else if (!strcmp(command, "bitmap_dump"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            bitmap_dump(bm_ptr);
+        }
+        /* Bitmap: Toggle the bit in given IDX. */
+        else if (!strcmp(command, "bitmap_flip"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t flip_idx = atoi(strtok(NULL, " "));
+
+            bitmap_flip(bm_ptr, flip_idx);
+        }
+        /* Bitmap: find the CNT consecutive bits group all with VALUE at, after START. */
+        else if (!strcmp(command, "bitmap_scan"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            size_t tmp_idx = bitmap_scan(bm_ptr, start_idx, cnt, value);
+            printf("%zu\n", tmp_idx);
+        }
+        /* Bitmap: find the CNT consecutive bits group all with VALUE at, after START. And flip them all to !VALUE */
+        else if (!strcmp(command, "bitmap_scan_and_flip"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            size_t tmp_idx = bitmap_scan_and_flip(bm_ptr, start_idx, cnt, value);
+            printf("%zu\n", tmp_idx);
+        }
+        /* Bitmap: set the bit in gieven index to VALUE. */
+        else if (!strcmp(command, "bitmap_set"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t idx = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            bitmap_set(bm_ptr, idx, value);
+        }
+        /* Bitmap: set the all bits to VALUE */
+        else if (!strcmp(command, "bitmap_set_all"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            bitmap_set_all(bm_ptr, value);
+        }
+        /* Bitmap: set the CNT bits starting at START in B to VALUE. */
+        else if (!strcmp(command, "bitmap_set_multiple"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            size_t start_idx = atoi(strtok(NULL, " "));
+            size_t cnt = atoi(strtok(NULL, " "));
+
+            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+
+            bitmap_set_multiple(bm_ptr, start_idx, cnt, value);
+        }
+        /* Bitmap: print the size of bitmap. */
+        else if (!strcmp(command, "bitmap_size"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            printf("%zu\n", bitmap_size(bm_ptr));
+        }
+        /* Bitmap: print the value of bitmap. */
+        else if (!strcmp(command, "bitmap_test"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+            size_t idx = atoi(strtok(NULL, " "));
+           
+            printf("%s\n", bitmap_test(bm_ptr, idx)? "true":"false");
+        }
+        /* Bitmap: expand the size of bit by given size */
+        else if (!strcmp(command, "bitmap_expand"))
+        {
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
+            int size = atoi(strtok(NULL, " "));
+            bitmap_expand(bm_ptr, size);
         }
 
         /* Hashtable: insert the given data. */

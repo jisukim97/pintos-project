@@ -103,10 +103,13 @@ bitmap_create (size_t bit_cnt)
 struct bitmap *
 bitmap_expand(struct bitmap *bitmap, int size)
 {
-  int new_cnt =  bitmap->bit_cnt + size;
+  int old_cnt = bitmap->bit_cnt;
+  int new_cnt = old_cnt + size;
+
   bitmap->bit_cnt = new_cnt;
   bitmap->bits = realloc(bitmap->bits, byte_cnt(new_cnt));
 
+  bitmap_set_multiple(bitmap, old_cnt, size, false);
   return bitmap;
 }
 
