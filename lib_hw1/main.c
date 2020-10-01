@@ -8,15 +8,6 @@
 
 #define MAX_SIZE 10
 
-struct list lists[MAX_SIZE];
-int lists_ptr = -1; /* pointer for lists stored */
-
-struct hash hashtables[MAX_SIZE];
-int hashs_ptr = -1; /* pointer for hashtables stored */
-
-struct bitmap * bitmaps[MAX_SIZE];
-int bitmaps_ptr = -1; /* pointer for bitmaps stored. */
-
 char *rtrim(char *s)
 {
     char t[MAX_SIZE];
@@ -55,22 +46,67 @@ char *trim(char *s)
     return rtrim(ltrim(s));
 }
 
+/* Store the recend idx used. It is used for deleting the element from the array. */
+int list_recent_idx;
+int hash_recent_idx;
+int bm_recent_idx;
+
+/* Store data structures. */
+struct list lists[MAX_SIZE];
+int list_avaliable[MAX_SIZE] = {0};
+
+struct hash hashtables[MAX_SIZE];
+int hash_avaliable[MAX_SIZE] = {0};
+
+struct bitmap *bitmaps[MAX_SIZE];
+int bitmap_avaliable[MAX_SIZE] = {0};
+
+/* Return the proper index for a new data structure. */
+int find_lists_idx()
+{
+    for (int i = 0; i < MAX_SIZE; i++)
+        if (list_avaliable[i] == 0)
+            return i;
+}
+
+int find_hashtables_idx()
+{
+    for (int i = 0; i < MAX_SIZE; i++)
+        if (hash_avaliable[i] == 0)
+            return i;
+}
+
+int find_bitmaps_idx()
+{
+    for (int i = 0; i < MAX_SIZE; i++)
+        if (bitmap_avaliable[i] == 0)
+            return i;
+}
+
 /* Find the exact list from the array of Lists. */
 struct list *find_list(char *finding_name)
 {
     finding_name = trim(finding_name);
-    for (int i = 0; i <= lists_ptr; i++)
-        if (!strcmp(finding_name, lists[i].name))
+    for (int i = 0; i < MAX_SIZE; i++)
+        if (list_avaliable[i] != 0 && !strcmp(finding_name, lists[i].name))
+        {
+            list_recent_idx = i;
             return &lists[i];
+        }
+    return NULL;
 }
 
 /* Find the exact hashtable from the array of Hashtables. */
 struct hash *find_hashtable(char *finding_name)
 {
     finding_name = trim(finding_name);
-    for (int i = 0; i <= hashs_ptr; i++)
-        if (!strcmp(finding_name, hashtables[i].name))
+    for (int i = 0; i < MAX_SIZE; i++)
+        if (hash_avaliable[i] != 0 && !strcmp(finding_name, hashtables[i].name))
+        {
+            hash_recent_idx = i;
             return &hashtables[i];
+        }
+    return NULL;
 }
 
 /* Find the exact bitmap from the array of Bitmap pointers. */
@@ -80,13 +116,16 @@ struct bitmap *find_bitmap(char *finding_name)
     strcpy(name, trim(finding_name));
 
     int i;
-    for (i = 0; i < bitmaps_ptr; i++)
+    for (i = 0; i < MAX_SIZE; i++)
     {
         char *tmp_name = bitmap_get_name(bitmaps[i]);
-        if (!strcmp(tmp_name, name))
-            break;
+        if (bitmap_avaliable[i] != 0 && !strcmp(tmp_name, name))
+        {
+            bm_recent_idx = i;
+            return bitmaps[i];
+        }
     }
-    return bitmaps[i];
+    return NULL;
 }
 
 int main()
@@ -112,7 +151,9 @@ int main()
             /* Create List. */
             if (!strcmp(command, "list"))
             {
-                struct list *list_ptr = &lists[++lists_ptr];
+                int idx = find_lists_idx();
+                list_avaliable[idx] = 1;
+                struct list *list_ptr = &lists[idx];
                 list_init(list_ptr);
 
                 command = strtok(NULL, " ");
@@ -121,25 +162,29 @@ int main()
             /* Create Hash table. */
             else if (!strcmp(command, "hashtable"))
             {
-                struct hash *hash_ptr = &hashtables[++hashs_ptr];
+                int idx = find_hashtables_idx();
+                hash_avaliable[idx] = 1;
+                struct hash *hash_ptr = &hashtables[idx];
                 hash_init(hash_ptr, hash_function, less_hash, NULL);
-                
+
                 for (int i = 0; i < hash_ptr->bucket_cnt; i++)
                     list_init(&hash_ptr->buckets[i]);
-                
+
                 command = strtok(NULL, " ");
                 strcpy(hash_ptr->name, trim(command));
             }
             /* Create Bitmap. */
             else if (!strcmp(command, "bitmap"))
             {
-                command = strtok(NULL," ");
+                int idx = find_bitmaps_idx();
+                bitmap_avaliable[idx] = 1;
+                command = strtok(NULL, " ");
                 char new_name[10];
                 strcpy(new_name, trim(command));
 
                 size_t size = atoi(strtok(NULL, " "));
-                bitmaps[++bitmaps_ptr] = bitmap_create(size);
-                bitmap_change_name(bitmaps[bitmaps_ptr], new_name);
+                bitmaps[idx] = bitmap_create(size);
+                bitmap_change_name(bitmaps[idx], new_name);
             }
         }
         /* Delete the data structure. */
@@ -147,20 +192,42 @@ int main()
         {
             command = strtok(NULL, " ");
 
-            /* List: delete. */
-            if (strstr(command, "list") != NULL)
+            struct list *list_ptr = find_list(command);
+            struct hash *hash_ptr = find_hashtable(command);
+            struct bitmap *bm_ptr = find_bitmap(command);
+
+            if (list_ptr!= NULL)
             {
-                list_init(find_list(command));
+                struct list *list_ptr = find_list(command);
+                struct list_item *dummy;
+                struct list_elem *begin = list_begin(list_ptr);
+
+                while (begin!=list_tail(list_ptr))
+                {
+                    dummy = list_entry(begin, struct list_item, elem);
+                    begin = list_next(begin);
+                    free(dummy);
+                }
+
+                list_init(list_ptr);
+                list_avaliable[list_recent_idx] = 0;
             }
+
             /* Hashtable: delete. */
-            else if (strstr(command, "hash") != NULL)
+            else if (hash_ptr != NULL)
             {
-                hash_init(find_hashtable(command), NULL, NULL, NULL);
+                struct hash *hash_ptr = find_hashtable(command);
+                hash_destroy(hash_ptr, *destructor);
+                hash_init(&hashtables[hash_recent_idx], NULL, NULL, NULL);
+                hash_avaliable[hash_recent_idx] = 0;
             }
             /* Bitmap: delete. */
-            else if (strstr(command, "bitmap") != NULL)
+            else if (bm_ptr!= NULL)
             {
-                
+                struct bitmap *bm_ptr = find_bitmap(command);
+                bitmap_destroy(bm_ptr);
+                bitmaps[bm_recent_idx] = NULL;
+                bitmap_avaliable[bm_recent_idx] = 0;
             }
         }
         /* Enumerate data in the structure. */
@@ -172,10 +239,10 @@ int main()
             /* List: enumerate. */
             if (strstr(command, "list") != NULL)
             {
-                struct list * list_ptr = find_list(command);
+                struct list *list_ptr = find_list(command);
                 struct list_elem *tmp_elem_ptr = list_begin(list_ptr);
 
-                while (list_tail(list_ptr)!=tmp_elem_ptr)
+                while (list_tail(list_ptr) != tmp_elem_ptr)
                 {
                     flag = 1;
                     struct list_item *tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
@@ -205,26 +272,26 @@ int main()
             /* Bitmap: enumerate. */
             else if (strstr(command, "bm") != NULL)
             {
-                struct bitmap * bm_ptr = find_bitmap(command);
-                bitmap_print(bm_ptr);                
+                struct bitmap *bm_ptr = find_bitmap(command);
+                bitmap_print(bm_ptr);
             }
             if (flag)
                 printf("\n");
         }
         /*  Bitmap: mark the bit indexed True. */
-        else if(!strcmp(command, "bitmap_mark"))
+        else if (!strcmp(command, "bitmap_mark"))
         {
-            command = strtok(NULL," ");
-            struct bitmap * bm_ptr = find_bitmap(command);
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
 
             int bit_idx = atoi(strtok(NULL, " "));
             bitmap_mark(bm_ptr, bit_idx);
         }
         /*  Bitmap: reset the bit with the given index. */
-        else if(!strcmp(command, "bitmap_reset"))
+        else if (!strcmp(command, "bitmap_reset"))
         {
-            command = strtok(NULL," ");
-            struct bitmap * bm_ptr = find_bitmap(command);
+            command = strtok(NULL, " ");
+            struct bitmap *bm_ptr = find_bitmap(command);
 
             int bit_idx = atoi(strtok(NULL, " "));
             bitmap_reset(bm_ptr, bit_idx);
@@ -237,7 +304,7 @@ int main()
 
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
-            
+
             printf("%s\n", bitmap_all(bm_ptr, start_idx, cnt) ? "true" : "false");
         }
         /* Bitmap: print whether any bit in given range is true. */
@@ -249,8 +316,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            
-            printf("%s\n", bitmap_any(bm_ptr,start_idx,cnt) ? "true" : "false");
+            printf("%s\n", bitmap_any(bm_ptr, start_idx, cnt) ? "true" : "false");
         }
         /* Bitmap: print whether the bits in given ragne are all the same as given VALUE. */
         else if (!strcmp(command, "bitmap_contains"))
@@ -274,7 +340,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            printf("%s\n",bitmap_none(bm_ptr, start_idx, cnt)? "true":"false");
+            printf("%s\n", bitmap_none(bm_ptr, start_idx, cnt) ? "true" : "false");
         }
         /* Bitmap: print the number of bits with the given VALUE in given range. */
         else if (!strcmp(command, "bitmap_count"))
@@ -285,7 +351,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             printf("%zu\n", bitmap_count(bm_ptr, start_idx, cnt, value));
         }
@@ -316,7 +382,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             size_t tmp_idx = bitmap_scan(bm_ptr, start_idx, cnt, value);
             printf("%zu\n", tmp_idx);
@@ -330,7 +396,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             size_t tmp_idx = bitmap_scan_and_flip(bm_ptr, start_idx, cnt, value);
             printf("%zu\n", tmp_idx);
@@ -343,7 +409,7 @@ int main()
 
             size_t idx = atoi(strtok(NULL, " "));
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             bitmap_set(bm_ptr, idx, value);
         }
@@ -353,7 +419,7 @@ int main()
             command = strtok(NULL, " ");
             struct bitmap *bm_ptr = find_bitmap(command);
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             bitmap_set_all(bm_ptr, value);
         }
@@ -366,7 +432,7 @@ int main()
             size_t start_idx = atoi(strtok(NULL, " "));
             size_t cnt = atoi(strtok(NULL, " "));
 
-            bool value = strcmp(trim(strtok(NULL, " ")),"true") ? false : true;
+            bool value = strcmp(trim(strtok(NULL, " ")), "true") ? false : true;
 
             bitmap_set_multiple(bm_ptr, start_idx, cnt, value);
         }
@@ -384,8 +450,8 @@ int main()
             command = strtok(NULL, " ");
             struct bitmap *bm_ptr = find_bitmap(command);
             size_t idx = atoi(strtok(NULL, " "));
-           
-            printf("%s\n", bitmap_test(bm_ptr, idx)? "true":"false");
+
+            printf("%s\n", bitmap_test(bm_ptr, idx) ? "true" : "false");
         }
         /* Bitmap: expand the size of bit by given size */
         else if (!strcmp(command, "bitmap_expand"))
@@ -422,11 +488,11 @@ int main()
                 hash_apply(hash_ptr, *triple);
         }
         /* Hashtable: delete the element in hashtable. */
-        else if(!strcmp(command, "hash_delete"))
+        else if (!strcmp(command, "hash_delete"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
-    
+
             struct hash_elem *hash_elem_ptr = malloc(sizeof(struct hash_elem));
             struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
             hash_item_ptr = hash_entry(hash_elem_ptr, struct hash_item, elem);
@@ -435,17 +501,18 @@ int main()
             hash_delete(hash_ptr, hash_elem_ptr);
         }
         /* Hashtable: print whether the hash is empty. */
-        else if(!strcmp(command, "hash_empty"))
+        else if (!strcmp(command, "hash_empty"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
 
-            if(hash_empty(hash_ptr))
+            if (hash_empty(hash_ptr))
                 printf("true\n");
-            else printf("false\n");
+            else
+                printf("false\n");
         }
         /* Hashtable: print the size of hash. */
-        else if(!strcmp(command, "hash_size"))
+        else if (!strcmp(command, "hash_size"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
@@ -453,7 +520,7 @@ int main()
             printf("%zu\n", hash_size(hash_ptr));
         }
         /* Hashtable: remove all the elements from the hash. */
-        else if(!strcmp(command, "hash_clear"))
+        else if (!strcmp(command, "hash_clear"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
@@ -461,7 +528,7 @@ int main()
             hash_clear(hash_ptr, *destructor);
         }
         /* Hashtable: find the equal element if there it is. */
-        else if(!strcmp(command, "hash_find"))
+        else if (!strcmp(command, "hash_find"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
@@ -471,11 +538,11 @@ int main()
             hash_item_ptr = hash_entry(hash_elem_ptr, struct hash_item, elem);
             hash_item_ptr->data = atoi(strtok(NULL, " "));
 
-            if(hash_find(hash_ptr, hash_elem_ptr)!=NULL)
+            if (hash_find(hash_ptr, hash_elem_ptr) != NULL)
                 printf("%d\n", hash_item_ptr->data);
         }
         /* Hashtable: replace the NEW element with OLD one. */
-        else if(!strcmp(command, "hash_replace"))
+        else if (!strcmp(command, "hash_replace"))
         {
             command = strtok(NULL, " ");
             struct hash *hash_ptr = find_hashtable(command);
