@@ -7,25 +7,19 @@
    last element.  The `prev' link of the front header is null, as
    is the `next' link of the back header.  Their other two links
    point toward each other via the interior elements of the list.
-
    An empty list looks like this:
-
                       +------+     +------+
                   <---| head |<--->| tail |--->
                       +------+     +------+
-
    A list with two elements in it looks like this:
-
         +------+     +-------+     +-------+     +------+
     <---| head |<--->|   1   |<--->|   2   |<--->| tail |<--->
         +------+     +-------+     +-------+     +------+
-
    The symmetry of this arrangement eliminates lots of special
    cases in list processing.  For example, take a look at
    list_remove(): it takes only two pointer assignments and no
    conditionals.  That's a lot simpler than the code would be
    without header elements.
-
    (Because only one of the pointers in each header element is used,
    we could in fact combine them into a single header element
    without sacrificing this simplicity.  But using two separate
@@ -86,7 +80,6 @@ list_next(struct list_elem *elem)
 }
 
 /* Returns LIST's tail.
-
    list_end() is often used in iterating through a list from
    front to back.  See the big comment at the top of list.h for
    an example. */
@@ -117,11 +110,9 @@ list_prev(struct list_elem *elem)
 }
 
 /* Returns LIST's head.
-
    list_rend() is often used in iterating through a list in
    reverse order, from back to front.  Here's typical usage,
    following the example from the top of list.h:
-
       for (e = list_rbegin (&foo_list); e != list_rend (&foo_list);
            e = list_prev (e))
         {
@@ -137,10 +128,8 @@ list_rend(struct list *list)
 }
 
 /* Return's LIST's head.
-
    list_head() can be used for an alternate style of iterating
    through a list, e.g.:
-
       e = list_head (&list);
       while ((e = list_next (e)) != list_end (&list)) 
         {
@@ -217,12 +206,10 @@ void list_push_back(struct list *list, struct list_elem *elem)
 
 /* Removes ELEM from its list and returns the element that
    followed it.  Undefined behavior if ELEM is not in a list.
-
    It's not safe to treat ELEM as an element in a list after
    removing it.  In particular, using list_next() or list_prev()
    on ELEM after removal yields undefined behavior.  This means
    that a naive loop to remove the elements in a list will fail:
-
    ** DON'T DO THIS **
    for (e = list_begin (&list); e != list_end (&list); e = list_next (e))
      {
@@ -230,19 +217,15 @@ void list_push_back(struct list *list, struct list_elem *elem)
        list_remove (e);
      }
    ** DON'T DO THIS **
-
    Here is one correct way to iterate and remove elements from a
    list:
-
    for (e = list_begin (&list); e != list_end (&list); e = list_remove (e))
      {
        ...do something with e...
      }
-
    If you need to free() elements of the list then you need to be
    more conservative.  Here's an alternate strategy that works
    even in that case:
-
    while (!list_empty (&list))
      {
        struct list_elem *e = list_pop_front (&list);
@@ -337,6 +320,7 @@ void list_reverse(struct list *list)
     swap(&list->head.next->prev, &list->tail.prev->next);
   }
 }
+
 
 /* Returns true only if the list elements A through B (exclusive)
    are in order according to LESS given auxiliary data AUX. */
@@ -527,32 +511,35 @@ void list_swap(struct list_elem *a, struct list_elem *b)
   struct list_elem *a_next = a->next;
 
   //insert item pointed by a into the position of item pointed by b
-  a->prev = b->prev;
-  a->next = b->next;
-  b->prev->next = a;
+  b->prev->next = (b->prev==a)? b->next : a;
   b->next->prev = a;
-
+  a->prev = (b->prev==a)? b : b->prev;
+  a->next = b->next;
+  
   //insert item pointed by b into the original position of item pointed by a
-  b->prev = a_prev;
-  b->next = a_next;
   a_prev->next = b;
-  a_next->prev = b;
+  a_next->prev = (b->prev==a)? a_prev : b;
+  b->prev = a_prev;
+  b->next = (a_next==b)? a : a_next;
 }
 
 /* Shuffle the list. */
 void list_shuffle(struct list *list)
 {
-  srand(time(NULL));
+  srand((unsigned int)time(NULL));
   unsigned int len = list_size(list);
   struct list_elem *a, *b;
+  struct list_elem * tmp_a;
   int random;
 
-  a = list_begin(list);
-  b = a;
+  tmp_a = list_begin(list);
+  a = tmp_a;
+  b = tmp_a;
 
-  for (int i = 0; i < len - 1; i++)
+  for (int i = 0; !is_tail(tmp_a); i++)
   {
-    random = rand() % (len - i) + i;
+    random = (int)rand() % len;
+    printf("this time random num: %d\n", random);
     while (random > 0)
     {
       b = list_next(b);
@@ -560,6 +547,19 @@ void list_shuffle(struct list *list)
       random--;
     }
     list_swap(a, b);
-    a = list_next(a);
+    tmp_a = list_next(tmp_a);
+    a = tmp_a;
+    b = tmp_a;
   }
+}
+
+/* list less functions. */
+bool less_list(const struct list_elem * a, const struct list_elem * b, void * aux)
+{
+  struct list_item * a_item = list_entry(a, struct list_item, elem);
+  struct list_item * b_item = list_entry(b, struct list_item, elem);
+
+  if( a_item->data< b_item->data)
+    return true;
+  else return false;
 }

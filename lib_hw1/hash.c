@@ -1,8 +1,6 @@
 /* Hash table.
-
    This data structure is thoroughly documented in the Tour of
    Pintos for Project 3.
-
    See hash.h for basic information. */
 
 #include "hash.h"
@@ -75,8 +73,8 @@ hash_clear (struct hash *h, hash_action_func *destructor)
   h->elem_cnt = 0;
 }
 
-/* Destroys hash table H.
 
+/* Destroys hash table H.
    If DESTRUCTOR is non-null, then it is first called for each
    element in the hash.  DESTRUCTOR may, if appropriate,
    deallocate the memory used by the hash element.  However,
@@ -139,7 +137,6 @@ hash_find (struct hash *h, struct hash_elem *e)
 /* Finds, removes, and returns an element equal to E in hash
    table H.  Returns a null pointer if no equal element existed
    in the table.
-
    If the elements of the hash table are dynamically allocated,
    or own resources that are, then it is the caller's
    responsibility to deallocate them. */
@@ -182,18 +179,14 @@ hash_apply (struct hash *h, hash_action_func *action)
 }
 
 /* Initializes I for iterating hash table H.
-
    Iteration idiom:
-
       struct hash_iterator i;
-
       hash_first (&i, h);
       while (hash_next (&i))
         {
           struct foo *f = hash_entry (hash_cur (&i), struct foo, elem);
           ...do something with f...
         }
-
    Modifying hash table H during iteration, using any of the
    functions hash_clear(), hash_destroy(), hash_insert(),
    hash_replace(), or hash_delete(), invalidates all
@@ -212,7 +205,6 @@ hash_first (struct hash_iterator *i, struct hash *h)
 /* Advances I to the next element in the hash table and returns
    it.  Returns a null pointer if no elements are left.  Elements
    are returned in arbitrary order.
-
    Modifying a hash table H during iteration, using any of the
    functions hash_clear(), hash_destroy(), hash_insert(),
    hash_replace(), or hash_delete(), invalidates all
@@ -303,6 +295,13 @@ hash_int (int i)
   return hash_bytes (&i, sizeof i);
 }
 
+/* Hash function with hash_int. */
+unsigned int hash_function(const struct hash_elem * e, void * aux)
+{
+  struct hash_item *hash_item_ptr = hash_entry(e, struct hash_item, elem);                 
+  return hash_int(hash_item_ptr->data);
+}
+
 /* Returns a hash of integer I (ver.2) */
 unsigned
 hash_int_2 (int i) 
@@ -310,7 +309,6 @@ hash_int_2 (int i)
   unsigned tmp = i;
   return tmp%4;
 }
-
 
 /* Returns the bucket in H that E belongs in. */
 static struct list *
@@ -439,3 +437,46 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
+/* hashtable less functions. */
+bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * aux)
+{
+  struct hash_item * a_item = hash_entry(a, struct hash_item, elem);
+  struct hash_item * b_item = hash_entry(b, struct hash_item, elem);
+
+  if( a_item->data < b_item->data)
+    return true;
+  else return false;
+}
+
+// Action Functions
+
+/* Action function1: SQUARE. */
+void square(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data;
+}
+
+/* Action functino2: TRIPLE. */
+void triple(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item_ptr = malloc(sizeof(struct hash_item));
+  hash_item_ptr = hash_entry(e, struct hash_item, elem);
+  int hash_data = hash_item_ptr->data;
+  hash_item_ptr->data = hash_data*hash_data*hash_data;
+}
+
+/* Action fuction3: DESTUCTOR. */
+void destructor(struct hash_elem *e, void *aux)
+{
+  struct hash_item *hash_item = hash_entry(e, struct hash_item, elem);
+
+  struct list_elem list_elem = e->list_elem;
+  struct list_elem * prev = list_elem.prev;
+  list_elem.prev->next = list_elem.next;
+  list_elem.next->prev = prev;
+
+  free(hash_item);
+}

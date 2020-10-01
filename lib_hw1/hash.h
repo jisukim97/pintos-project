@@ -2,15 +2,12 @@
 #define __LIB_KERNEL_HASH_H
 
 /* Hash table.
-
    This data structure is thoroughly documented in the Tour of
    Pintos for Project 3.
-
    This is a standard hash table with chaining.  To locate an
    element in the table, we compute a hash function over the
    element's data and use that as an index into an array of
    doubly linked lists, then linearly search the list.
-
    The chain lists do not use dynamic allocation.  Instead, each
    structure that can potentially be in a hash must embed a
    struct hash_elem member.  All of the hash functions operate on
@@ -65,6 +62,7 @@ typedef void hash_action_func(struct hash_elem *e, void *aux);
 /* Hash table. */
 struct hash
 {
+  char name[10];           /* Name given by User. */
   size_t elem_cnt;      /* Number of elements in table. */
   size_t bucket_cnt;    /* Number of buckets, a power of 2. */
   struct list *buckets; /* Array of `bucket_cnt' lists. */
@@ -107,7 +105,6 @@ unsigned hash_bytes(const void *, size_t);
 unsigned hash_string(const char *);
 unsigned hash_int(int);
 
-<<<<<<< HEAD
 /* Less function. */
 bool less_hash(const struct hash_elem * a, const struct hash_elem * b, void * aux);
 
@@ -121,9 +118,6 @@ void triple(struct hash_elem * e, void * aux);
 void destructor(struct hash_elem *e, void *aux);
 
 /* Added hash_int_2. */
-=======
-/* Added hash function. */
->>>>>>> bb96d6e7dc9916979c08ef220388da694e48a76d
 unsigned hash_int_2 (int);
 
 #endif /* lib/kernel/hash.h */
