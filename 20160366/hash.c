@@ -306,8 +306,17 @@ unsigned int hash_function(const struct hash_elem * e, void * aux)
 unsigned
 hash_int_2 (int i) 
 {
-  unsigned tmp = i;
-  return tmp%4;
+  const unsigned char *buf = &i;
+  unsigned hash;
+
+  ASSERT (buf != NULL);
+
+  hash = 2 ^ *buf++;
+  hash = hash ^ (*buf++ * 5);
+  hash = hash ^ (*buf++ * 7);
+  hash = hash ^ (*buf * 13);
+
+  return hash;
 }
 
 /* Returns the bucket in H that E belongs in. */

@@ -53,33 +53,33 @@ int bm_recent_idx;
 
 /* Store data structures. */
 struct list lists[MAX_SIZE];
-int list_avaliable[MAX_SIZE] = {0};
+int list_available[MAX_SIZE] = {0};
 
 struct hash hashtables[MAX_SIZE];
-int hash_avaliable[MAX_SIZE] = {0};
+int hash_available[MAX_SIZE] = {0};
 
 struct bitmap *bitmaps[MAX_SIZE];
-int bitmap_avaliable[MAX_SIZE] = {0};
+int bitmap_available[MAX_SIZE] = {0};
 
 /* Return the proper index for a new data structure. */
 int find_lists_idx()
 {
     for (int i = 0; i < MAX_SIZE; i++)
-        if (list_avaliable[i] == 0)
+        if (list_available[i] == 0)
             return i;
 }
 
 int find_hashtables_idx()
 {
     for (int i = 0; i < MAX_SIZE; i++)
-        if (hash_avaliable[i] == 0)
+        if (hash_available[i] == 0)
             return i;
 }
 
 int find_bitmaps_idx()
 {
     for (int i = 0; i < MAX_SIZE; i++)
-        if (bitmap_avaliable[i] == 0)
+        if (bitmap_available[i] == 0)
             return i;
 }
 
@@ -88,7 +88,7 @@ struct list *find_list(char *finding_name)
 {
     finding_name = trim(finding_name);
     for (int i = 0; i < MAX_SIZE; i++)
-        if (list_avaliable[i] != 0 && !strcmp(finding_name, lists[i].name))
+        if (list_available[i] != 0 && !strcmp(finding_name, lists[i].name))
         {
             list_recent_idx = i;
             return &lists[i];
@@ -101,7 +101,7 @@ struct hash *find_hashtable(char *finding_name)
 {
     finding_name = trim(finding_name);
     for (int i = 0; i < MAX_SIZE; i++)
-        if (hash_avaliable[i] != 0 && !strcmp(finding_name, hashtables[i].name))
+        if (hash_available[i] != 0 && !strcmp(finding_name, hashtables[i].name))
         {
             hash_recent_idx = i;
             return &hashtables[i];
@@ -119,7 +119,7 @@ struct bitmap *find_bitmap(char *finding_name)
     for (i = 0; i < MAX_SIZE; i++)
     {
         char *tmp_name = bitmap_get_name(bitmaps[i]);
-        if (bitmap_avaliable[i] != 0 && !strcmp(tmp_name, name))
+        if (bitmap_available[i] != 0 && !strcmp(tmp_name, name))
         {
             bm_recent_idx = i;
             return bitmaps[i];
@@ -152,7 +152,7 @@ int main()
             if (!strcmp(command, "list"))
             {
                 int idx = find_lists_idx();
-                list_avaliable[idx] = 1;
+                list_available[idx] = 1;
                 struct list *list_ptr = &lists[idx];
                 list_init(list_ptr);
 
@@ -163,7 +163,7 @@ int main()
             else if (!strcmp(command, "hashtable"))
             {
                 int idx = find_hashtables_idx();
-                hash_avaliable[idx] = 1;
+                hash_available[idx] = 1;
                 struct hash *hash_ptr = &hashtables[idx];
                 hash_init(hash_ptr, hash_function, less_hash, NULL);
 
@@ -177,7 +177,7 @@ int main()
             else if (!strcmp(command, "bitmap"))
             {
                 int idx = find_bitmaps_idx();
-                bitmap_avaliable[idx] = 1;
+                bitmap_available[idx] = 1;
                 command = strtok(NULL, " ");
                 char new_name[10];
                 strcpy(new_name, trim(command));
@@ -210,7 +210,7 @@ int main()
                 }
 
                 list_init(list_ptr);
-                list_avaliable[list_recent_idx] = 0;
+                list_available[list_recent_idx] = 0;
             }
             /* Hashtable: delete. */
             else if (hash_ptr != NULL)
@@ -218,7 +218,7 @@ int main()
                 struct hash *hash_ptr = find_hashtable(command);
                 hash_destroy(hash_ptr, *destructor);
                 hash_init(&hashtables[hash_recent_idx], NULL, NULL, NULL);
-                hash_avaliable[hash_recent_idx] = 0;
+                hash_available[hash_recent_idx] = 0;
             }
             /* Bitmap: delete. */
             else if (bm_ptr!= NULL)
@@ -226,7 +226,7 @@ int main()
                 struct bitmap *bm_ptr = find_bitmap(command);
                 bitmap_destroy(bm_ptr);
                 bitmaps[bm_recent_idx] = NULL;
-                bitmap_avaliable[bm_recent_idx] = 0;
+                bitmap_available[bm_recent_idx] = 0;
             }
         }
         /* Enumerate data in the structure. */
