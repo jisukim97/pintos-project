@@ -109,6 +109,21 @@ list_prev(struct list_elem *elem)
   return elem->prev;
 }
 
+/* Returns the elment located in the given index in the list. */
+struct list_elem *
+list_find_elem_by_index(struct list *l, int index)
+{
+  struct list_elem * elem_ptr = list_begin(l);
+  int i = 0;
+  while (i < index)
+  {
+    elem_ptr = list_next(elem_ptr);
+    i++;
+  }
+
+  return elem_ptr;
+}
+
 /* Returns LIST's head.
    list_rend() is often used in iterating through a list in
    reverse order, from back to front.  Here's typical usage,
@@ -536,10 +551,9 @@ void list_shuffle(struct list *list)
   a = tmp_a;
   b = tmp_a;
 
-  for (int i = 0; !is_tail(tmp_a); i++)
+  for (int i = 0; !is_tail(a); i++)
   {
-    random = (int)rand() % len;
-    printf("this time random num: %d\n", random);
+    random = (int)rand() % len-1;
     while (random > 0)
     {
       b = list_next(b);

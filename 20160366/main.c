@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "list.c"
-#include "hash.c"
-#include "bitmap.c"
+#include "list.h"
+#include "hash.h"
+#include "bitmap.h"
 
 #define MAX_SIZE 10
 
@@ -184,7 +184,7 @@ int main()
 
                 size_t size = atoi(strtok(NULL, " "));
                 bitmaps[idx] = bitmap_create(size);
-                bitmap_change_name(bitmaps[idx], new_name);
+                bitmap_set_name(bitmaps[idx], new_name);
             }
         }
         /* Delete the data structure. */
@@ -212,7 +212,6 @@ int main()
                 list_init(list_ptr);
                 list_avaliable[list_recent_idx] = 0;
             }
-
             /* Hashtable: delete. */
             else if (hash_ptr != NULL)
             {
@@ -632,22 +631,16 @@ int main()
         else if (!strcmp(command, "list_insert"))
         {
             command = strtok(NULL, " ");
-            struct list_elem *before_elem_ptr = list_begin(find_list(command));
+            struct list *list_ptr = find_list(command);
 
-            int i = 0;
             int index = atoi(strtok(NULL, " "));
-            while (i < index)
-            {
-                before_elem_ptr = list_next(before_elem_ptr);
-                i++;
-            }
 
             struct list_elem *tmp_elem_ptr = malloc(sizeof(struct list_elem));
             struct list_item *tmp_item = malloc(sizeof(struct list_item));
             tmp_item = list_entry(tmp_elem_ptr, struct list_item, elem);
             tmp_item->data = atoi(strtok(NULL, " "));
 
-            list_insert(before_elem_ptr, tmp_elem_ptr);
+            list_insert(list_find_elem_by_index(list_ptr, index), tmp_elem_ptr);
         }
         /* List: Test whether the list is empty */
         else if (!strcmp(command, "list_empty"))
@@ -728,41 +721,53 @@ int main()
 
             list_sort(tmp_lists_ptr, *less_list, NULL);
         }
+        /* List:  */
+        else if (!strcmp(command, "list_splice"))
+        {
+            command = strtok(NULL, " ");
+            struct list *list1 = find_list(command);
+            int before = atoi(strtok(NULL, " "));
+
+            command = strtok(NULL, " ");
+            struct list *list2 = find_list(command);
+            int first = atoi(strtok(NULL, " "));
+            int last = atoi(strtok(NULL, " "));
+
+            struct list_elem * before_elem = list_find_elem_by_index(list1, before);
+            struct list_elem * first_elem = list_find_elem_by_index(list2, first);
+            struct list_elem * last_elem = list_find_elem_by_index(list2, last);
+
+            list_splice( before_elem, first_elem, last_elem);
+        }
         /* List: Move duplicated value to the second list. */
         else if (!strcmp(command, "list_unique"))
         {
             command = strtok(NULL, " ");
             struct list *tmp_lists_ptr = find_list(command);
             command = strtok(NULL, " ");
-            struct list *duplicate_lists_ptr = find_list(command);
+            struct list *duplicate_lists_ptr;
 
+            if (command != NULL)
+                duplicate_lists_ptr = find_list(command);
+
+            else {
+                duplicate_lists_ptr = malloc(sizeof(struct list));
+                list_init(duplicate_lists_ptr);
+            }
             list_unique(tmp_lists_ptr, duplicate_lists_ptr, *less_list, NULL);
         }
         /* List: Swap two elements with the given index. */
         else if (!strcmp(command, "list_swap"))
         {
             command = strtok(NULL, " ");
-            struct list_elem *first_elem_ptr = list_begin(find_list(command));
-            struct list_elem *second_elem_ptr = first_elem_ptr;
+            struct list *list_ptr = find_list(command);
 
             int first_i = atoi(strtok(NULL, " "));
             int second_i = atoi(strtok(NULL, " "));
 
             /* Find the first element. */
-            int i = 0;
-            while (i < first_i)
-            {
-                first_elem_ptr = list_next(first_elem_ptr);
-                i++;
-            }
-
-            /* Find the second element. */
-            i = 0;
-            while (i < second_i)
-            {
-                second_elem_ptr = list_next(second_elem_ptr);
-                i++;
-            }
+            struct list_elem *first_elem_ptr = list_find_elem_by_index(list_ptr, first_i);
+            struct list_elem *second_elem_ptr = list_find_elem_by_index(list_ptr, second_i);
 
             list_swap(first_elem_ptr, second_elem_ptr);
         }

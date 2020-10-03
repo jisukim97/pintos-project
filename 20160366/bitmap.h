@@ -1,3 +1,4 @@
+  
 #ifndef __LIB_KERNEL_BITMAP_H
 #define __LIB_KERNEL_BITMAP_H
 
@@ -16,8 +17,11 @@ void bitmap_destroy (struct bitmap *);
 /* Bitmap size. */
 size_t bitmap_size (const struct bitmap *);
 
+/* Get the name of bitmap. */
+char * bitmap_get_name(struct bitmap * b);
+
 /* Changing Bitmap name. */
-void bitmap_change_name(struct bitmap * b, char * new_name);
+void bitmap_set_name(struct bitmap * b, char * new_name);
 
 /* Changing Bitmap size. */
 struct bitmap *bitmap_expand(struct bitmap *bitmap, int size);
@@ -55,7 +59,10 @@ bool bitmap_write (const struct bitmap *, struct file *);
 /* Debugging. */
 void bitmap_dump (const struct bitmap *);
 
+/* Print the elements in the bitmap, */
+void bitmap_print(struct bitmap *b);
+
 /* Ect. */
-int getAbit(unsigned int x, int n);
+int get_a_bit(unsigned long x, int n);
 
 #endif /* lib/kernel/bitmap.h */

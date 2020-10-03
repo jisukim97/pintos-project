@@ -298,8 +298,8 @@ hash_int (int i)
 /* Hash function with hash_int. */
 unsigned int hash_function(const struct hash_elem * e, void * aux)
 {
-  struct hash_item *hash_item_ptr = hash_entry(e, struct hash_item, elem);                 
-  return hash_int(hash_item_ptr->data);
+  struct hash_item *hash = hash_entry(e, struct hash_item, elem);                 
+  return hash_int(hash->data);
 }
 
 /* Returns a hash of integer I (ver.2) */

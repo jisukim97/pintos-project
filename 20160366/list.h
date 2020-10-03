@@ -130,6 +130,7 @@ struct list_elem *list_pop_back (struct list *);
 /* List elements. */
 struct list_elem *list_front (struct list *);
 struct list_elem *list_back (struct list *);
+struct list_elem * list_find_elem_by_index(struct list *l, int index);
 
 /* List properties. */
 size_t list_size (struct list *);

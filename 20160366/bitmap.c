@@ -9,8 +9,7 @@
 #include "filesys/file.h"
 #endif
 
-#include "hex_dump.h"
-#include "hex_dump.c"	// 'hex_dump' : defined in pintos/src/lib/stdio.c
+#include "hex_dump.h"// 'hex_dump' : defined in pintos/src/lib/stdio.c
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
 /* Element type.
@@ -381,7 +380,7 @@ bitmap_write (const struct bitmap *b, struct file *file)
   return file_write_at (file, b->bits, size, 0) == size;
 }
 #endif /* FILESYS */
-
+
 /* Debugging. */
 
 /* Dumps the contents of B to the console as hexadecimal. */
@@ -400,7 +399,7 @@ bitmap_get_name(struct bitmap * b)
 
 /* Change the bitmap name when it is created. */
 void 
-bitmap_change_name(struct bitmap * b, char *new_name)
+bitmap_set_name(struct bitmap * b, char *new_name)
 {
   strcpy(b->name, new_name);
 }
@@ -410,19 +409,19 @@ void bitmap_print(struct bitmap *b)
 {
   size_t bits_cnt = b->bit_cnt;
   size_t elem_tot = elem_idx(bits_cnt);
+  elem_type * bits = b->bits;
 
   for(int i=0; i<= elem_tot; i++)
   {
-    elem_type * bits = b->bits;
-    for(int j=0; j< bits_cnt; j++)
-      printf("%d", getAbit(bits[i],j));
-    
-    bits_cnt -= sizeof(elem_type);
-  } 
+    for (int j = 0; j < bits_cnt; j++)
+      printf("%d", get_a_bit(bits[i], j));
+
+    bits_cnt -= ELEM_BITS;
+  }
   printf("\n");
 }
 
-// 지정한 정수에서, 몇번째 비트만 읽어서 반환하는 함수
-int getAbit(unsigned int x, int n) { 
+/* Return a bit from the given location. */
+int get_a_bit(unsigned long x, int n) { 
   return (x & (1 << n)) >> n;
 }
