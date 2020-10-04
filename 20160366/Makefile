@@ -18,3 +18,4 @@ hex_dump.o: hex_dump.c
 
 clean:
 	rm *.o
+	rm testlib
