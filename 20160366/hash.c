@@ -306,7 +306,7 @@ unsigned int hash_function(const struct hash_elem * e, void * aux)
 unsigned
 hash_int_2 (int i) 
 {
-  const unsigned char *buf = &i;
+  const unsigned int *buf = &i;
   unsigned hash;
 
   ASSERT (buf != NULL);

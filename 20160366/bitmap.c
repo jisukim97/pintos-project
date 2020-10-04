@@ -30,7 +30,7 @@ typedef unsigned long elem_type;
    simulates an array of bits. */
 struct bitmap
   {
-    char name[10];      /* Name of bits. */
+    char name[100];      /* Name of bits. */
     size_t bit_cnt;     /* Number of bits. */
     elem_type *bits;    /* Elements that represent bits. */
   };
