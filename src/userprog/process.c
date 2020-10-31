@@ -221,6 +221,18 @@ load (const char *file_name, void (**eip) (void), void **esp)
     goto done;
   process_activate ();
 
+  /* Parse the file name. */
+  int argc = 0;
+  char *argv[32];
+  char *word, *save_ptr;
+
+  word = strtok_r(file_name, " ", &save_ptr);
+  while(word!=NULL)
+  {
+    argv[argc++] = word;
+    word = strtok_r(NULL, " ", &save_ptr);
+  } 
+
   /* Open executable file. */
   file = filesys_open (file_name);
   if (file == NULL) 
@@ -305,17 +317,45 @@ load (const char *file_name, void (**eip) (void), void **esp)
   if (!setup_stack (esp))
     goto done;
 
+  /* Push arguments into stack. */
+  uintptr_t addr[32];
+  int i;
+
+  for (i = argc - 1; i >= 0; i--)
+  {
+    *esp -= strlen(argv[i]) + 1;
+    strlcpy(*esp, argv[i], strlen(argv[i]) + 1);
+    addr[i] = (uintptr_t)*esp;
+  }
+
+  *esp = (uintptr_t)*esp & ~0x3; //word align
+
+  *esp -= sizeof(uintptr_t);
+  for (i = argc - 1; i >= 0; i--)
+  {
+    *esp -= sizeof(uintptr_t);
+    *(uintptr_t *)*esp = addr[i];
+  }
+
+  *esp -= sizeof(uintptr_t);
+  *(uintptr_t *)*esp = (uintptr_t)*esp + sizeof(uintptr_t);
+
+  *esp -= sizeof(uintptr_t);
+  *(int *)*esp = argc;
+
+  *esp -= sizeof(uintptr_t);
+
   /* Start address. */
-  *eip = (void (*) (void)) ehdr.e_entry;
+  *eip = (void (*)(void))ehdr.e_entry;
 
   success = true;
 
- done:
+done:
   /* We arrive here whether the load is successful or not. */
-  file_close (file);
+  file_close(file);
   return success;
 }
-
+
 /* load() helpers. */
 
 static bool install_page (void *upage, void *kpage, bool writable);
