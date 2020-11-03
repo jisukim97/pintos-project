@@ -96,8 +96,9 @@ struct thread
 #ifdef USERPROG
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
+    struct process *pcb;                /* Process Control Block. */
+    struct list children;               /* List of children proess. */
 #endif
-
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
   };
@@ -137,5 +138,11 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+uint32_t * thread_get_pagedir(struct thread *);
+
+void thread_set_pcb(struct process *);
+struct process* thread_get_pcb(void);
+struct list* thread_get_children(void);
 
 #endif /* threads/thread.h */
