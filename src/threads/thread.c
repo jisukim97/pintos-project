@@ -466,6 +466,8 @@ init_thread(struct thread *t, const char *name, int priority)
 #ifdef USERPROG
   t->pcb = NULL;
   list_init(&t->children);
+  t->next_fd = 2;
+  list_init(&t->fdt);
 #endif
 }
 
@@ -597,8 +599,40 @@ thread_get_pcb(void)
 }
 
 /* Returns current thread's children thread. */
-struct list *
+struct list * 
 thread_get_children(void)
 {
   return &thread_current()->children;
+}
+
+/* Returns current thread's fdt. */
+struct list * 
+thread_get_fdt(void)
+{
+  return &thread_current()->fdt;
+}
+
+/* Returns current thread's next file descriptor number and increment it by 1.*/
+int 
+thread_get_next_fd(void)
+{
+  int next_fd = thread_current() -> next_fd;
+
+  thread_current()->next_fd++;
+
+  return next_fd;
+}
+
+/* Sets current thread's running file to NEW_RUNNING_FILE. */
+void 
+thread_set_running_file(struct file *new_running_file)
+{
+  thread_current()->running_file = new_running_file;
+}
+
+/* Returns current thread’s running file.*/
+struct file *
+thread_get_running_file(void)
+{
+  return thread_current()->running_file;
 }
