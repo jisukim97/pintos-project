@@ -28,6 +28,12 @@ static struct list ready_list;
    when they are first scheduled and removed when they exit. */
 static struct list all_list;
 
+/* List for sleeping processes. */
+static struct list sleep_list;
+
+/* Tick for storing smallest wakeup_tick in sleep list. */
+int64_t next_tick_to_awake;
+
 /* Idle thread. */
 static struct thread *idle_thread;
 
@@ -53,6 +59,10 @@ static long long user_ticks;   /* # of timer ticks in user programs. */
 /* Scheduling. */
 #define TIME_SLICE 4          /* # of timer ticks to give each thread. */
 static unsigned thread_ticks; /* # of timer ticks since last yield. */
+
+#ifndef USERPROG
+bool thread_prior_aging;
+#endif
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.
@@ -91,6 +101,7 @@ void thread_init(void)
   lock_init(&tid_lock);
   list_init(&ready_list);
   list_init(&all_list);
+  list_init(&sleep_list);
 
   /* Set up a thread structure for the running thread. */
   initial_thread = running_thread();
@@ -134,6 +145,13 @@ void thread_tick(void)
   /* Enforce preemption. */
   if (++thread_ticks >= TIME_SLICE)
     intr_yield_on_return();
+
+#ifndef USERPROG
+  thread_wake_up();
+
+  if(thread_prior_aging==true)
+    thread_aging();
+#endif
 }
 
 /* Prints thread statistics. */
@@ -196,6 +214,9 @@ tid_t thread_create(const char *name, int priority,
   /* Add to run queue. */
   thread_unblock(t);
 
+  if(thread_current()->priority < priority)
+    thread_yield();
+
   return tid;
 }
 
@@ -231,7 +252,7 @@ void thread_unblock(struct thread *t)
 
   old_level = intr_disable();
   ASSERT(t->status == THREAD_BLOCKED);
-  list_push_back(&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, *cmp_priority, NULL);
   t->status = THREAD_READY;
   intr_set_level(old_level);
 }
@@ -299,7 +320,7 @@ void thread_yield(void)
 
   old_level = intr_disable();
   if (cur != idle_thread)
-    list_push_back(&ready_list, &cur->elem);
+     list_insert_ordered(&ready_list, &cur->elem, *cmp_priority, NULL);
   cur->status = THREAD_READY;
   schedule();
   intr_set_level(old_level);
@@ -325,6 +346,7 @@ void thread_foreach(thread_action_func *func, void *aux)
 void thread_set_priority(int new_priority)
 {
   thread_current()->priority = new_priority;
+  test_max_priotity();
 }
 
 /* Returns the current thread's priority. */
@@ -360,12 +382,6 @@ int thread_get_recent_cpu(void)
   return 0;
 }
 
-/* Returns the current thread's page dir. */
-uint32_t *
-thread_get_pagedir(struct thread *thrd)
-{
-  return thrd->pagedir;
-}
 
 /* Idle thread.  Executes when no other thread is ready to run.
 
@@ -466,6 +482,8 @@ init_thread(struct thread *t, const char *name, int priority)
 #ifdef USERPROG
   t->pcb = NULL;
   list_init(&t->children);
+  t->next_fd = 2;
+  list_init(&t->fdt);
 #endif
 }
 
@@ -582,6 +600,16 @@ allocate_tid(void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof(struct thread, stack);
 
+
+#ifdef USRERPROG
+
+/* Returns the current thread's page dir. */
+uint32_t *
+thread_get_pagedir(struct thread *thrd)
+{
+  return thrd->pagedir;
+}
+
 /* Sets current thread's PCB new_pcb. */
 void
 thread_set_pcb(struct process *new_pcb)
@@ -597,8 +625,117 @@ thread_get_pcb(void)
 }
 
 /* Returns current thread's children thread. */
-struct list *
+struct list * 
 thread_get_children(void)
 {
   return &thread_current()->children;
+}
+
+/* Returns current thread's fdt. */
+struct list * 
+thread_get_fdt(void)
+{
+  return &thread_current()->fdt;
+}
+
+/* Returns current thread's next file descriptor number and increment it by 1.*/
+int 
+thread_get_next_fd(void)
+{
+  int next_fd = thread_current() -> next_fd;
+
+  thread_current()->next_fd++;
+
+  return next_fd;
+}
+
+/* Sets current thread's running file to NEW_RUNNING_FILE. */
+void 
+thread_set_running_file(struct file *new_running_file)
+{
+  thread_current()->running_file = new_running_file;
+}
+
+/* Returns current thread’s running file.*/
+struct file *
+thread_get_running_file(void)
+{
+  return thread_current()->running_file;
+}
+#endif
+
+// Alarm Clock System Call
+
+/* Inserts current thread into sleep list. */
+void thread_sleep(int64_t ticks)
+{ 
+  enum intr_level old_level; 
+  struct thread * t = thread_current();
+ 
+  ASSERT(is_thread(t));
+  old_level = intr_disable();
+  t->wakeup_ticks = ticks;
+  list_push_back(&sleep_list,&t->elem);
+  thread_block();
+
+  if(next_tick_to_awake>ticks)
+    update_next_tick_to_awake(ticks);
+    
+  intr_set_level(old_level);
+}
+
+/* Awakes sleeped thread whose ticks are same or smaller than given ticks. */
+void thread_awake(int64_t ticks)
+{
+  struct list_elem *e;
+
+  for (e = list_begin(&sleep_list); e != list_end(&sleep_list); )
+  {
+    struct thread *t = list_entry(e, struct thread, elem);
+    if (t->wakeup_ticks <= ticks)
+    {
+      e = list_remove(e);
+      thread_unblock(t);
+    }
+    else e = list_next(e);
+  }
+}
+
+/* Updates the next_tick_to_awake with the smallest value. */
+void update_next_tick_to_awake(int64_t ticks)
+{
+  next_tick_to_awake = ticks;
+}
+
+/* Returns next tick to awake value.*/
+int64_t get_next_tick_to_awake(void)
+{
+  return next_tick_to_awake;
+}
+
+// Priotiry Scheduling
+
+/* Compares the priority of two threads. Used in thread project. */
+bool cmp_priority(const struct list_elem *a, const struct list_elem *b, void *aus UNUSED)
+{
+  struct thread *t1 = list_entry(a, struct thread, elem);
+  struct thread *t2 = list_entry(b, struct thread, elem);
+
+  if (t1->priority > t2->priority)
+    return true;
+  else
+    return false;
+}
+
+/* Compares the highest .*/
+void test_max_priotity(void)
+{
+  if (!list_empty(&ready_list))
+  {
+    struct list_elem *e = list_begin(&ready_list);
+    struct thread *t = list_entry(e, struct thread, elem);
+
+    if (thread_current()->priority < t->priority)
+      thread_yield();
+  }
 }

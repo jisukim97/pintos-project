@@ -4,6 +4,11 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include "threads/synch.h"
+
+#ifndef USERPROG
+extern bool thread_prior_aging:
+#endif
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -98,9 +103,17 @@ struct thread
     uint32_t *pagedir;                  /* Page directory. */
     struct process *pcb;                /* Process Control Block. */
     struct list children;               /* List of children proess. */
-#endif
+    struct list fdt;                    /* File descriptor table. */
+    int next_fd;                        /* File descroptor number for next new file.*/
+    struct file *running_file;          /* Currently running file. */
+#endif 
+
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+    /* Alarm clock. */
+    int64_t wakeup_ticks;                 /* Ticks for waking up from sleeping. */
+
   };
 
 /* If false (default), use round-robin scheduler.
@@ -139,10 +152,25 @@ void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
 
+#ifdef USRERPROG
 uint32_t * thread_get_pagedir(struct thread *);
 
 void thread_set_pcb(struct process *);
 struct process* thread_get_pcb(void);
 struct list* thread_get_children(void);
+
+struct list * thread_get_fdt(void);
+int thread_get_next_fd(void);
+void thread_set_running_file(struct file *);
+struct file * thread_get_running_file(void);
+#endif
+
+void thread_sleep(int64_t ticks);
+void thread_awake(int64_t ticks);
+void update_next_tick_to_awake(int64_t ticks);
+int64_t get_next_tick_to_awake(void);
+
+void test_max_priotity(void);
+bool cmp_priority(const struct list_elem *a, const struct list_elem *b, void *aus UNUSED);
 
 #endif /* threads/thread.h */

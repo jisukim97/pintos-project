@@ -8,4 +8,6 @@ void sys_exit(int);
 int sys_fibonacci(int);
 int sys_max_of_four(int, int, int, int);
 
+struct lock *get_filesys_lock(void);
+
 #endif /* userprog/syscall.h */

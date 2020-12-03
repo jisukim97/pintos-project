@@ -7,6 +7,7 @@
 #include <string.h>
 #include "userprog/gdt.h"
 #include "userprog/pagedir.h"
+#include "userprog/syscall.h"
 #include "userprog/tss.h"
 #include "filesys/directory.h"
 #include "filesys/file.h"
@@ -15,8 +16,8 @@
 #include "threads/init.h"
 #include "threads/interrupt.h"
 #include "threads/palloc.h"
-#include "threads/thread.h"
 #include "threads/vaddr.h"
+
 
 static thread_func start_process NO_RETURN;
 static bool load(const char *cmdline, void (**eip)(void), void **esp);
@@ -77,8 +78,6 @@ static void
 start_process(void *pcb_)
 {
   struct process *pcb = pcb_;
-  int argc = 0;
-  char *argv[32];
   char *file_name = pcb->file_name;
   struct intr_frame if_;
   bool success;
@@ -145,13 +144,21 @@ void process_exit(void)
   struct process *pcb = thread_get_pcb();
   struct list *children = thread_get_children();
   struct list_elem *e;
+  struct lock *filesys_lock = get_filesys_lock();
   uint32_t *pd;
+  int max_fd = thread_get_next_fd(), i;
 
   pcb->is_exited = true;
   for (e = list_begin(children); e != list_end(children); e = list_next(e))
     process_remove_child(list_entry(e, struct process, child_elem));
+  for (i = 2; i < max_fd; i++)
+    sys_close(i);
 
   sema_up(&pcb->sema_exit);
+
+  lock_acquire(filesys_lock);
+  file_close(thread_get_running_file());
+  lock_release(filesys_lock); 
 
   /* Destroy the current process's page directory and switch back
      to the kernel-only page directory. */
@@ -262,6 +269,7 @@ static bool load_segment(struct file *file, off_t ofs, uint8_t *upage,
 bool load(const char *file_name, void (**eip)(void), void **esp)
 {
   struct thread *t = thread_current();
+  struct lock *filesys_lock = get_filesys_lock();
   struct Elf32_Ehdr ehdr;
   struct file *file = NULL;
   off_t file_ofs;
@@ -287,12 +295,17 @@ bool load(const char *file_name, void (**eip)(void), void **esp)
   }
 
   /* Open executable file. */
+  lock_acquire(filesys_lock);
+
   file = filesys_open(argv[0]);
   if (file == NULL)
   {
     printf("load: %s: open failed\n", argv[0]);
     goto done;
   }
+
+  thread_set_running_file(file);
+  file_deny_write(file);
 
   /* Read and verify executable header. */
   if (file_read(file, &ehdr, sizeof ehdr) != sizeof ehdr || memcmp(ehdr.e_ident, "\177ELF\1\1\1", 7) || ehdr.e_type != 2 || ehdr.e_machine != 3 || ehdr.e_version != 1 || ehdr.e_phentsize != sizeof(struct Elf32_Phdr) || ehdr.e_phnum > 1024)
@@ -398,7 +411,7 @@ bool load(const char *file_name, void (**eip)(void), void **esp)
 
 done:
   /* We arrive here whether the load is successful or not. */
-  file_close(file);
+  lock_release(filesys_lock);
   return success;
 }
 
@@ -575,4 +588,18 @@ void process_remove_child(struct process *child)
     list_remove(&child->child_elem);
     palloc_free_page(child);
   }
+}
+
+/* Returns current process's file descriptor entry with fd. */
+struct file_descriptor_entry *process_get_fd(int fd)
+{
+  struct list *fdt = thread_get_fdt();
+  struct list_elem *e;
+  for (e = list_begin(fdt); e != list_end(fdt); e = list_next(e))
+  {
+    struct file_descriptor_entry *fde = list_entry(e, struct file_descriptor_entry, fdt_elem);
+    if (fde->fd == fd)
+      return fde;
+  }
+  return NULL;
 }
