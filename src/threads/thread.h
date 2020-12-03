@@ -7,7 +7,7 @@
 #include "threads/synch.h"
 
 #ifndef USERPROG
-extern bool thread_prior_aging:
+extern bool thread_prior_aging;
 #endif
 
 /* States in a thread's life cycle. */
@@ -113,6 +113,9 @@ struct thread
 
     /* Alarm clock. */
     int64_t wakeup_ticks;                 /* Ticks for waking up from sleeping. */
+   
+   /* Culmulated Ticks in Ready list. */
+    int64_t ticks_in_ready;               /* Update value when it is in ready list. */
 
   };
 
@@ -172,5 +175,7 @@ int64_t get_next_tick_to_awake(void);
 
 void test_max_priotity(void);
 bool cmp_priority(const struct list_elem *a, const struct list_elem *b, void *aus UNUSED);
+void thread_aging(void);
+void update_ready_thread_ticks();
 
 #endif /* threads/thread.h */
