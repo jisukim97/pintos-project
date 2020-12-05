@@ -117,6 +117,9 @@ struct thread
    /* Culmulated Ticks in Ready list. */
     int64_t ticks_in_ready;               /* Update value when it is in ready list. */
 
+   /* Additional Data Structure for BSD scheduler. */
+    int nice;
+    int recent_cpu;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -147,14 +150,6 @@ void thread_yield (void);
 typedef void thread_action_func (struct thread *t, void *aux);
 void thread_foreach (thread_action_func *, void *);
 
-int thread_get_priority (void);
-void thread_set_priority (int);
-
-int thread_get_nice (void);
-void thread_set_nice (int);
-int thread_get_recent_cpu (void);
-int thread_get_load_avg (void);
-
 #ifdef USRERPROG
 uint32_t * thread_get_pagedir(struct thread *);
 
@@ -167,6 +162,20 @@ int thread_get_next_fd(void);
 void thread_set_running_file(struct file *);
 struct file * thread_get_running_file(void);
 #endif
+
+int thread_get_priority (void);
+void thread_set_priority (int);
+
+int thread_get_nice (void);
+void thread_set_nice (int);
+int thread_get_recent_cpu (void);
+int thread_get_load_avg (void);
+
+void mlfqs_priority(struct thread *);
+void mlfqs_recent_cpu(struct thread *);
+void mlfqs_load_avg(void);
+void mlfqs_increment(void);
+void mlfqs_recalc(void);
 
 void thread_sleep(int64_t ticks);
 void thread_awake(int64_t ticks);
