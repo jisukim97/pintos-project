@@ -20,3 +20,10 @@ Plus, there would be a exit message when a process exited.
 ### User Program (2)
 
 To use file system, we have to implement system calls about file system: create, remove, open, close, filesize, read, write, seek, tell
+
+
+
+## project3
+### Threads
+Default scheduler used in pintos is a Round-Robin scheduler without considering priority and aging issue. In this project, we will upgrade the scheduler to consider both issues and also make alarm clock system call more efficient. To achieve efficiency, we have to convert original method of busy waiting
+to sleep/awake technique.
