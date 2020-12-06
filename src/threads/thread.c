@@ -140,8 +140,6 @@ void thread_tick(void)
 {
   struct thread *t = thread_current();
 
-  update_ready_thread_ticks();
-
   /* Update statistics. */
   if (t == idle_thread)
     idle_ticks++;
@@ -221,9 +219,7 @@ tid_t thread_create(const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock(t);
-
-  if(thread_current()->priority < priority)
-    thread_yield();
+  test_max_priotity();
 
   return tid;
 }
@@ -378,7 +374,7 @@ void thread_set_nice(int new_nice)
   mlfqs_priority(t);
   intr_set_level(old_level);
   
-  thread_yield();
+  test_max_priotity();
 }
 
 /* Returns the current thread's nice value. */
@@ -445,7 +441,7 @@ void mlfqs_recalc(void)
 {
   struct list_elem *e;
   struct thread *t;
-  int max_pri = -1;
+  int max_pri;
   
   for (e = list_begin (&all_list); e != list_end (&all_list); e = list_next (e))
   {
@@ -456,6 +452,7 @@ void mlfqs_recalc(void)
    
   if (!list_empty(&ready_list))
   {
+    list_sort(&ready_list, cmp_priority, NULL);
     t = list_entry(list_front(&ready_list), struct thread, elem);
     max_pri = t->priority;
   }
@@ -771,6 +768,7 @@ void thread_sleep(int64_t ticks)
 /* Awakes sleeped thread whose ticks are same or smaller than given ticks. */
 void thread_awake(int64_t ticks)
 {
+  int flag=0;
   struct list_elem *e;
 
   for (e = list_begin(&sleep_list); e != list_end(&sleep_list); )
@@ -780,9 +778,13 @@ void thread_awake(int64_t ticks)
     {
       e = list_remove(e);
       thread_unblock(t);
+      flag=1;
     }
     else e = list_next(e);
   }
+
+  if(flag)
+    intr_yield_on_return();
 }
 
 /* Updates the next_tick_to_awake with the smallest value. */
@@ -824,28 +826,17 @@ void test_max_priotity(void)
   }
 }
 
-/* Updates ready threads' ticks one by one ticks. */
-void update_ready_thread_ticks()
-{
-  struct list_elem *e;
-
-  for (e = list_begin(&ready_list); e != list_end(&ready_list); e=list_next(e))
-  {
-    struct thread *t = list_entry(e, struct thread, elem);
-    t->ticks_in_ready++;
-  }
-}
-
 /* Ages sleeping threads by ticks incresed. */
 void thread_aging()
 {
   struct list_elem *e;
   struct thread *t;
-  int max_pri = -1;
+  int max_pri;
 
   for (e = list_begin(&ready_list); e != list_end(&ready_list); e=list_next(e))
   {
     t = list_entry(e, struct thread, elem);
+    t->ticks_in_ready++;
     int pri = t->priority + 4*(t->ticks_in_ready);
 
     if(pri>PRI_MAX)
@@ -856,6 +847,7 @@ void thread_aging()
 
   if (!list_empty(&ready_list))
   {
+    list_sort(&ready_list,cmp_priority,NULL);
     t = list_entry(list_front(&ready_list), struct thread, elem);
     max_pri = t->priority;
   }

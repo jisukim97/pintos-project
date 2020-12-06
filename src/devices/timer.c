@@ -176,14 +176,16 @@ timer_interrupt (struct intr_frame *args UNUSED)
   {
     mlfqs_increment();  // every 1 tick
 
+    if(timer_ticks() % 4==0) // every 4 ticks
+    {
+      mlfqs_priority(thread_current());
+    }
+
     if(timer_ticks() % TIMER_FREQ==0) // every 1 sec
     {
       mlfqs_load_avg();
       mlfqs_recalc();
     }
-
-    if(timer_ticks() % 4==0) // every 4 ticks
-      mlfqs_priority(thread_current()); 
   }
   thread_tick ();
 }

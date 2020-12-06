@@ -114,7 +114,7 @@ struct thread
     /* Alarm clock. */
     int64_t wakeup_ticks;                 /* Ticks for waking up from sleeping. */
    
-   /* Culmulated Ticks in Ready list. */
+   /* Cumulated Ticks in Ready list. */
     int64_t ticks_in_ready;               /* Update value when it is in ready list. */
 
    /* Additional Data Structure for BSD scheduler. */
