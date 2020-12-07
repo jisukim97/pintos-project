@@ -26,4 +26,5 @@ To use file system, we have to implement system calls about file system: create,
 ## project3
 ### Threads
 Default scheduler used in pintos is a Round-Robin scheduler without considering priority and aging issue. In this project, we will upgrade the scheduler to consider both issues and also make alarm clock system call more efficient. To achieve efficiency, we have to convert original method of busy waiting
-to sleep/awake technique.
+to sleep/awake technique. 
+Furthermore, to make BSD scheduler, we have to implement complex calculation of priority using the values of RECENT CPU, NICE, LOAD AVERAGE at a proper clock tick. Fixed point operations are also needed.
